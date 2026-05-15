@@ -12,6 +12,7 @@ import type { CampaignRecord, ClientProfile } from "@/lib/types";
 import { downloadTextFile, formatDateTime } from "@/lib/utils";
 
 import { AgentResultCard } from "./agent-result-card";
+import { BrandLabPanel } from "./brand-lab-panel";
 import { CampaignHistory } from "./campaign-history";
 import { ImageGenerationPanel } from "./image-generation-panel";
 
@@ -392,6 +393,8 @@ export function AgencyWorkspace({
               isVisible={!!activeCampaign?.results.artDirector}
             />
           ) : null}
+
+          {selectedClient ? <BrandLabPanel key={selectedClient.id} client={selectedClient} /> : null}
         </div>
       </section>
     </div>

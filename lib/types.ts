@@ -13,6 +13,8 @@ export type AgentKey =
   | "trafficManager"
   | "analyst";
 
+export type ChatRole = "user" | "assistant";
+
 export type OutputLanguage = "pt-BR" | "en-US" | "es-ES";
 
 export interface ClientProfile {
@@ -50,6 +52,21 @@ export interface AppUser {
   email: string | null;
   name: string;
   avatarUrl: string | null;
+}
+
+export interface BrandChatAttachment {
+  name: string;
+  mimeType: string;
+  dataUrl: string;
+  size: number;
+}
+
+export interface BrandChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  attachments: BrandChatAttachment[];
+  createdAt: string;
 }
 
 export interface BrandTheme {

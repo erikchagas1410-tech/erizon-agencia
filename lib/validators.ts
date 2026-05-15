@@ -8,7 +8,7 @@ export const clientPayloadSchema = z.object({
   main_objective: z.string().min(8, "Explique o objetivo principal."),
   post_sign_off: z.string().min(2, "Informe a assinatura fixa."),
   value_proposition: z.string().min(8, "Explique o diferencial real."),
-  content_style: z.string().min(8, "Descreva o estilo de conteúdo."),
+  content_style: z.string().min(8, "Descreva o estilo de conteudo."),
   visual_aesthetic: z.string().min(5, "Descreva o tom visual."),
   reason_to_exist: z.string().min(8, "Explique o motivo de existir."),
   content_pillars: z
@@ -22,9 +22,29 @@ export const clientPayloadSchema = z.object({
 });
 
 export const agencyRequestSchema = z.object({
-  clientId: z.string().uuid("Cliente inválido."),
+  clientId: z.string().uuid("Cliente invalido."),
   request: z
     .string()
     .min(3, "Digite um pedido para o time.")
-    .max(500, "O pedido precisa ter até 500 caracteres.")
+    .max(500, "O pedido precisa ter ate 500 caracteres.")
+});
+
+const brandAttachmentSchema = z.object({
+  name: z.string().min(1),
+  mimeType: z.string().startsWith("image/"),
+  dataUrl: z.string().startsWith("data:image/"),
+  size: z.number().max(4_000_000)
+});
+
+const brandHistoryMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().min(1).max(12000),
+  attachments: z.array(brandAttachmentSchema).max(5)
+});
+
+export const brandChatRequestSchema = z.object({
+  clientId: z.string().uuid("Cliente invalido."),
+  message: z.string().max(4000),
+  attachments: z.array(brandAttachmentSchema).max(5),
+  history: z.array(brandHistoryMessageSchema).max(16)
 });
