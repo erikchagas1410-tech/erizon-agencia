@@ -30,6 +30,7 @@ export interface ClientProfile {
   reason_to_exist: string;
   content_pillars: string[];
   brand_character: string;
+  brand_colors: string;
   created_at: string;
 }
 
@@ -79,6 +80,7 @@ export interface ClientFormValues {
   reason_to_exist: string;
   content_pillars: string;
   brand_character: string;
+  brand_colors: string;
 }
 
 export interface AgentDefinition {

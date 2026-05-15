@@ -70,7 +70,10 @@ export async function PUT(
 
   const { data, error } = await supabase
     .from("clients")
-    .update(parsed.data)
+    .update({
+      ...parsed.data,
+      brand_colors: parsed.data.brand_colors
+    })
     .eq("id", params.id)
     .select("*")
     .single();

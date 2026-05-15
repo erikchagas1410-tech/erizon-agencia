@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     .from("clients")
     .insert({
       ...parsed.data,
+      brand_colors: parsed.data.brand_colors,
       user_id: user.id
     })
     .select("*")

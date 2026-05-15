@@ -8,6 +8,19 @@ import { ArrowRight, Mail, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { APP_NAME } from "@/lib/constants";
 
+function getAuthFeedbackMessage(errorMessage: string) {
+  const normalized = errorMessage.toLowerCase();
+
+  if (
+    normalized.includes("unsupported provider") ||
+    normalized.includes("provider is not enabled")
+  ) {
+    return "O login com Google ainda não está habilitado no Supabase deste projeto. Ative o provider Google em Authentication > Sign In / Providers e configure o Client ID e Client Secret.";
+  }
+
+  return errorMessage;
+}
+
 export function LoginPanel() {
   const searchParams = useSearchParams();
   const redirectedFrom = searchParams.get("redirectedFrom") || "/";
@@ -42,7 +55,7 @@ export function LoginPanel() {
     });
 
     if (error) {
-      setFeedback(error.message);
+      setFeedback(getAuthFeedbackMessage(error.message));
       setIsLoading(null);
     }
   }
@@ -67,7 +80,7 @@ export function LoginPanel() {
     });
 
     if (error) {
-      setFeedback(error.message);
+      setFeedback(getAuthFeedbackMessage(error.message));
     } else {
       setFeedback("Magic link enviado. Confira sua caixa de entrada.");
     }
@@ -166,6 +179,9 @@ export function LoginPanel() {
             ) : null}
 
             <div className="rounded-2xl border border-dashed border-white/10 bg-black/30 p-4 text-xs leading-6 text-white/48">
+              Para entrar com Google, habilite o provider no painel do Supabase em{" "}
+              <code>Authentication &gt; Sign In / Providers &gt; Google</code>.
+              <br />
               Para magic link em ambiente SSR, configure o template de e-mail do
               Supabase para redirecionar ao endpoint <code>/auth/callback</code>.
             </div>

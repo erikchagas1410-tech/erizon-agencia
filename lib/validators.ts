@@ -17,7 +17,8 @@ export const clientPayloadSchema = z.object({
     .max(5, "Cadastre entre 3 e 5 pilares."),
   brand_character: z
     .string()
-    .min(16, "Descreva o personagem da marca em 2 ou 3 linhas.")
+    .min(16, "Descreva o personagem da marca em 2 ou 3 linhas."),
+  brand_colors: z.string()
 });
 
 export const agencyRequestSchema = z.object({

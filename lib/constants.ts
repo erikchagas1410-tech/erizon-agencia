@@ -62,7 +62,8 @@ export const DEFAULT_CLIENT_FORM_VALUES: ClientFormValues = {
   visual_aesthetic: "",
   reason_to_exist: "",
   content_pillars: "",
-  brand_character: ""
+  brand_character: "",
+  brand_colors: ""
 };
 
 export const AGENT_LABEL_BY_KEY = AGENT_DEFINITIONS.reduce<

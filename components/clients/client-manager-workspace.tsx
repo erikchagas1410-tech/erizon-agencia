@@ -7,7 +7,12 @@ import { Plus, Save, Trash2, Users } from "lucide-react";
 import { inferBrandTheme } from "@/lib/brand-theme";
 import { DEFAULT_CLIENT_FORM_VALUES } from "@/lib/constants";
 import type { ClientFormValues, ClientProfile } from "@/lib/types";
-import { buildPillarsInput, parsePillarsInput, toClientPayload } from "@/lib/utils";
+import {
+  buildPillarsInput,
+  parseBrandColors,
+  parsePillarsInput,
+  toClientPayload
+} from "@/lib/utils";
 
 const FIELD_META: Array<{
   key: keyof ClientFormValues;
@@ -96,7 +101,8 @@ function toFormValues(client: ClientProfile): ClientFormValues {
     visual_aesthetic: client.visual_aesthetic,
     reason_to_exist: client.reason_to_exist,
     content_pillars: buildPillarsInput(client.content_pillars),
-    brand_character: client.brand_character
+    brand_character: client.brand_character,
+    brand_colors: client.brand_colors
   };
 }
 
@@ -131,7 +137,7 @@ export function ClientManagerWorkspace({
       return null;
     }
 
-    return inferBrandTheme({
+    const theme = inferBrandTheme({
       id: selectedClient?.id || "preview",
       user_id: selectedClient?.user_id || "preview",
       created_at: selectedClient?.created_at || new Date().toISOString(),
@@ -146,9 +152,28 @@ export function ClientManagerWorkspace({
       visual_aesthetic: formValues.visual_aesthetic,
       reason_to_exist: formValues.reason_to_exist,
       content_pillars: parsePillarsInput(formValues.content_pillars),
-      brand_character: formValues.brand_character
+      brand_character: formValues.brand_character,
+      brand_colors: formValues.brand_colors
     });
+
+    const customPalette = parseBrandColors(formValues.brand_colors);
+
+    if (customPalette.length === 0) {
+      return theme;
+    }
+
+    return {
+      ...theme,
+      primary: customPalette[0] || theme.primary,
+      secondary: customPalette[1] || theme.secondary,
+      accent: customPalette[2] || customPalette[0] || theme.accent,
+      palette: customPalette
+    };
   }, [formValues, selectedClient]);
+
+  const brandColorSwatches = useMemo(() => {
+    return parseBrandColors(formValues.brand_colors);
+  }, [formValues.brand_colors]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -448,6 +473,37 @@ export function ClientManagerWorkspace({
                 </label>
               );
             })}
+
+            <label className="block space-y-2 sm:col-span-2">
+              <span className="text-sm font-medium text-white/84">
+                Paleta de Cores da Marca
+              </span>
+              <input
+                type="text"
+                value={formValues.brand_colors}
+                onChange={(event) =>
+                  setFormValues((current) => ({
+                    ...current,
+                    brand_colors: event.target.value
+                  }))
+                }
+                placeholder="Ex.: #E8D2B5, #B7945C, #1B1B1B"
+                className="input-shell px-4 py-4 text-sm"
+              />
+
+              {brandColorSwatches.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {brandColorSwatches.map((color) => (
+                    <div
+                      key={color}
+                      className="h-10 w-10 rounded-xl border border-white/10 flex-shrink-0"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </label>
           </div>
 
           <button

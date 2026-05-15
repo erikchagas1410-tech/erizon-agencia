@@ -33,9 +33,17 @@ export function buildPillarsInput(pillars: string[]) {
   return pillars.join("\n");
 }
 
+export function parseBrandColors(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item));
+}
+
 export function toClientPayload(values: ClientFormValues) {
   return {
     ...values,
+    brand_colors: values.brand_colors,
     content_pillars: parsePillarsInput(values.content_pillars)
   };
 }

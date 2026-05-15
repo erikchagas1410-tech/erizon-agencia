@@ -1,4 +1,5 @@
 import type { BrandTheme, ClientProfile } from "@/lib/types";
+import { parseBrandColors } from "@/lib/utils";
 
 const PRESETS: Array<BrandTheme & { matchers: string[] }> = [
   {
@@ -102,20 +103,32 @@ export function inferBrandTheme(client: ClientProfile): BrandTheme {
     }
   }
 
-  if (!bestTheme) {
-    return FALLBACK_THEME;
+  const baseTheme = bestTheme
+    ? {
+        primary: bestTheme.primary,
+        secondary: bestTheme.secondary,
+        accent: bestTheme.accent,
+        bg: bestTheme.bg,
+        surface: bestTheme.surface,
+        palette: bestTheme.palette,
+        typography: bestTheme.typography,
+        mood: bestTheme.mood,
+        keywords: bestTheme.keywords
+      }
+    : FALLBACK_THEME;
+
+  const customPalette = parseBrandColors(client.brand_colors);
+
+  if (customPalette.length === 0) {
+    return baseTheme;
   }
 
   return {
-    primary: bestTheme.primary,
-    secondary: bestTheme.secondary,
-    accent: bestTheme.accent,
-    bg: bestTheme.bg,
-    surface: bestTheme.surface,
-    palette: bestTheme.palette,
-    typography: bestTheme.typography,
-    mood: bestTheme.mood,
-    keywords: bestTheme.keywords
+    ...baseTheme,
+    primary: customPalette[0] || baseTheme.primary,
+    secondary: customPalette[1] || baseTheme.secondary,
+    accent: customPalette[2] || customPalette[0] || baseTheme.accent,
+    palette: customPalette
   };
 }
 
