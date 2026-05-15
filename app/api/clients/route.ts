@@ -54,6 +54,13 @@ export async function POST(request: Request) {
     .insert({
       ...parsed.data,
       brand_colors: parsed.data.brand_colors,
+      ...(parsed.data.logo_url !== undefined
+        ? {
+            logo_url: parsed.data.logo_url?.trim()
+              ? parsed.data.logo_url.trim()
+              : null
+          }
+        : {}),
       user_id: user.id
     })
     .select("*")

@@ -9,14 +9,12 @@ const FORMAT_DIMENSIONS: Record<
   carousel_cover: { width: 1024, height: 1024, label: "Carrossel Cover" }
 };
 
-const STYLE_ROTATIONS = [
-  "clean minimalist layout, generous white space, bold modern typography, premium social media graphic",
-  "editorial magazine style, asymmetric grid composition, strong contrast, high-end design",
-  "layered depth with subtle texture overlays, sophisticated premium feel, polished finish",
-  "geometric shapes as design elements, contemporary graphic design, striking visual hierarchy",
-  "lifestyle composition, soft natural lighting, aspirational mood, professional photography style",
-  "typographic-led design, expressive font hierarchy, minimal imagery, designer poster aesthetic"
-];
+const FORMAT_CONTEXT: Record<ImageFormat, string> = {
+  feed: "square social media feed post, 1:1 ratio",
+  story: "vertical Instagram or TikTok story, 9:16 ratio, full bleed",
+  carousel_cover:
+    "carousel cover slide, 1:1 ratio, visually leads a sequence of slides"
+};
 
 export function buildPollinationsUrl({
   artDirectorBrief,
@@ -37,28 +35,28 @@ export function buildPollinationsUrl({
   index: number;
   round: number;
 }): string {
-  const styleIndex = (round * 3 + index) % STYLE_ROTATIONS.length;
-  const style = STYLE_ROTATIONS[styleIndex];
   const dims = FORMAT_DIMENSIONS[format];
+  const formatContext = FORMAT_CONTEXT[format];
+  const brief = artDirectorBrief.trim().slice(0, 600);
 
   const colorInstruction = brandColors?.trim()
-    ? `Brand color palette: ${brandColors}.`
-    : `Visual aesthetic: ${visualAesthetic}.`;
+    ? `Exact brand color palette: ${brandColors}.`
+    : `Visual aesthetic and color mood: ${visualAesthetic}.`;
 
   const prompt = [
-    `Professional social media graphic for ${clientName}.`,
-    `Art direction: ${artDirectorBrief.slice(0, 400)}.`,
+    `Professional ${formatContext} for the brand "${clientName}".`,
+    `Creative direction from art director: ${brief}.`,
     `Brand personality: ${personality}.`,
     colorInstruction,
-    `Design style: ${style}.`,
-    "No text overlays. No logos. Ultra high quality. Ready for publication.",
-    "Digital illustration or photorealistic. Sharp details."
+    `Visual aesthetic: ${visualAesthetic}.`,
+    "No text. No logos. No watermarks. Ultra high quality. Ready for publication.",
+    "Photorealistic or high-end digital illustration. Sharp details. Premium finish."
   ].join(" ");
 
-  const seed = (round * 100 + index + 1) * 7;
+  const seed = (round * 1000 + index * 137 + 42) % 99999;
   const encoded = encodeURIComponent(prompt);
 
-  return `https://image.pollinations.ai/prompt/${encoded}?width=${dims.width}&height=${dims.height}&nologo=true&seed=${seed}`;
+  return `https://image.pollinations.ai/prompt/${encoded}?width=${dims.width}&height=${dims.height}&nologo=true&seed=${seed}&enhance=true`;
 }
 
 export function getFormatLabel(format: ImageFormat): string {

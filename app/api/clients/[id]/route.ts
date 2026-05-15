@@ -72,7 +72,14 @@ export async function PUT(
     .from("clients")
     .update({
       ...parsed.data,
-      brand_colors: parsed.data.brand_colors
+      brand_colors: parsed.data.brand_colors,
+      ...(parsed.data.logo_url !== undefined
+        ? {
+            logo_url: parsed.data.logo_url?.trim()
+              ? parsed.data.logo_url.trim()
+              : null
+          }
+        : {})
     })
     .eq("id", params.id)
     .select("*")

@@ -153,7 +153,8 @@ export function ClientManagerWorkspace({
       reason_to_exist: formValues.reason_to_exist,
       content_pillars: parsePillarsInput(formValues.content_pillars),
       brand_character: formValues.brand_character,
-      brand_colors: formValues.brand_colors
+      brand_colors: formValues.brand_colors,
+      logo_url: selectedClient?.logo_url ?? null
     });
 
     const customPalette = parseBrandColors(formValues.brand_colors);

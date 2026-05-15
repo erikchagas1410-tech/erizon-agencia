@@ -3,18 +3,28 @@
 import type { CSSProperties } from "react";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Download, Rocket, Sparkles, WandSparkles } from "lucide-react";
+import {
+  Download,
+  ImageIcon,
+  LayoutPanelTop,
+  MessageSquareText,
+  PenLine,
+  Rocket,
+  Sparkles,
+  WandSparkles
+} from "lucide-react";
 
 import { inferBrandTheme } from "@/lib/brand-theme";
 import { AGENT_DEFINITIONS, REQUEST_SUGGESTIONS } from "@/lib/constants";
 import { buildCampaignMarkdown } from "@/lib/markdown";
 import type { CampaignRecord, ClientProfile } from "@/lib/types";
-import { downloadTextFile, formatDateTime } from "@/lib/utils";
+import { cn, downloadTextFile, formatDateTime } from "@/lib/utils";
 
 import { AgentResultCard } from "./agent-result-card";
 import { BrandLabPanel } from "./brand-lab-panel";
 import { CampaignHistory } from "./campaign-history";
 import { ImageGenerationPanel } from "./image-generation-panel";
+import { TemplateEditor } from "./template-editor";
 
 function buildThemeStyle(client: ClientProfile | null) {
   if (!client) {
@@ -45,6 +55,11 @@ export function AgencyWorkspace({
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [activeWorkspaceView, setActiveWorkspaceView] = useState<
+    "results" | "images" | "editor" | "brand"
+  >("results");
+  const [lastGeneratedImageUrl, setLastGeneratedImageUrl] = useState("");
+  const [editorInstruction, setEditorInstruction] = useState("");
 
   const selectedClient = useMemo(
     () => initialClients.find((client) => client.id === selectedClientId) || null,
@@ -86,9 +101,14 @@ export function AgencyWorkspace({
     return () => window.clearTimeout(timeout);
   }, [feedback]);
 
+  useEffect(() => {
+    setLastGeneratedImageUrl("");
+    setEditorInstruction("");
+  }, [activeCampaign?.id, selectedClientId]);
+
   async function handleGenerate() {
     if (!selectedClientId || !requestText.trim()) {
-      setFeedback("Selecione um cliente e escreva a solicitação.");
+      setFeedback("Selecione um cliente e escreva a solicitacao.");
       return;
     }
 
@@ -118,7 +138,8 @@ export function AgencyWorkspace({
         setActiveCampaignId(payload.campaign.id);
       });
 
-      setFeedback("Squad concluída e campanha salva no histórico.");
+      setActiveWorkspaceView("results");
+      setFeedback("Squad concluida e campanha salva no historico.");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "Erro inesperado.");
     } finally {
@@ -129,6 +150,7 @@ export function AgencyWorkspace({
   function handleHistorySelect(campaign: CampaignRecord) {
     setActiveCampaignId(campaign.id);
     setRequestText(campaign.request);
+    setActiveWorkspaceView("results");
   }
 
   function handleExport() {
@@ -153,7 +175,7 @@ export function AgencyWorkspace({
         </span>
         <div className="mt-6 space-y-4">
           <h1 className="font-heading text-3xl font-semibold">
-            Cadastre seu primeiro cliente para começar a operar.
+            Cadastre seu primeiro cliente para comecar a operar.
           </h1>
           <p className="max-w-2xl text-white/68">
             O AI Agency OS precisa da identidade de marca completa para disparar os 5
@@ -163,7 +185,7 @@ export function AgencyWorkspace({
             href="/clientes"
             className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
           >
-            Ir para gestão de clientes
+            Ir para gestao de clientes
             <Rocket className="h-4 w-4" />
           </Link>
         </div>
@@ -173,22 +195,22 @@ export function AgencyWorkspace({
 
   return (
     <div className="space-y-6" style={buildThemeStyle(selectedClient)}>
-      <section className="glass-panel neon-border overflow-hidden rounded-[2rem] p-6 sm:p-8">
-        <div className="grid gap-8 xl:grid-cols-[1.15fr,0.85fr]">
-          <div className="space-y-5">
+      <section className="glass-panel neon-border overflow-hidden rounded-[2rem] p-6 sm:p-7">
+        <div className="grid gap-6 xl:grid-cols-[1.22fr,0.78fr]">
+          <div className="space-y-4">
             <span className="section-kicker">
               <WandSparkles className="h-3.5 w-3.5" />
-              Produção Assistida por Multiagentes
+              Producao Assistida por Multiagentes
             </span>
 
             <div>
-              <h1 className="max-w-3xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">
-                Digite um pedido simples e deixe a squad montar estratégia, copy,
-                direção visual, tráfego e métricas com contexto total da marca.
+              <h1 className="max-w-3xl font-heading text-3xl font-semibold leading-tight sm:text-[2.6rem]">
+                Digite um pedido simples e deixe a squad montar estrategia, copy,
+                direcao visual, trafego e metricas com contexto total da marca.
               </h1>
-              <p className="mt-4 max-w-2xl text-white/70">
-                A cada execução, o sistema carrega automaticamente a identidade da
-                marca cadastrada e salva a campanha no histórico do cliente.
+              <p className="mt-3 max-w-2xl text-sm text-white/70 sm:text-base">
+                O dashboard foi reorganizado para manter o foco em uma etapa por vez e
+                reduzir a rolagem excessiva.
               </p>
             </div>
 
@@ -220,13 +242,15 @@ export function AgencyWorkspace({
                 <div className="text-xs uppercase tracking-[0.18em] text-white/40">
                   Tom de voz
                 </div>
-                <div className="mt-2 text-sm text-white/82">{selectedClient?.voice_tone}</div>
+                <div className="mt-2 line-clamp-3 text-sm text-white/82">
+                  {selectedClient?.voice_tone}
+                </div>
               </div>
               <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
                 <div className="text-xs uppercase tracking-[0.18em] text-white/40">
                   Objetivo principal
                 </div>
-                <div className="mt-2 text-sm text-white/82">
+                <div className="mt-2 line-clamp-3 text-sm text-white/82">
                   {selectedClient?.main_objective}
                 </div>
               </div>
@@ -234,7 +258,7 @@ export function AgencyWorkspace({
 
             <div className="mt-4 rounded-3xl border border-white/8 bg-white/[0.03] p-4">
               <div className="text-xs uppercase tracking-[0.18em] text-white/40">
-                Pilares de conteúdo
+                Pilares de conteudo
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedClient?.content_pillars.map((pillar) => (
@@ -249,7 +273,7 @@ export function AgencyWorkspace({
             </div>
 
             {theme ? (
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-4 flex items-center gap-3 overflow-x-auto pb-1">
                 {theme.palette.map((color) => (
                   <div key={color} className="space-y-1">
                     <div
@@ -267,8 +291,8 @@ export function AgencyWorkspace({
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.9fr,1.1fr]">
-        <div className="space-y-6">
+      <section className="grid gap-6 xl:grid-cols-[0.84fr,1.16fr]">
+        <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
           <div className="glass-panel rounded-[1.75rem] p-5">
             <div className="mb-5">
               <h2 className="font-heading text-2xl font-semibold">Disparar a squad</h2>
@@ -296,12 +320,12 @@ export function AgencyWorkspace({
 
               <label className="block space-y-2">
                 <span className="text-sm font-medium text-white/82">
-                  Solicitação criativa
+                  Solicitacao criativa
                 </span>
                 <textarea
                   value={requestText}
                   onChange={(event) => setRequestText(event.target.value)}
-                  rows={7}
+                  rows={6}
                   placeholder="Ex.: crie um carrossel de dicas para Michelle"
                   className="input-shell resize-none px-4 py-4 text-sm"
                 />
@@ -353,48 +377,131 @@ export function AgencyWorkspace({
 
         <div className="space-y-6">
           <div className="glass-panel rounded-[1.75rem] p-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="font-heading text-2xl font-semibold">Entregáveis da squad</h2>
-                <p className="mt-2 text-sm text-white/56">
-                  {activeCampaign
-                    ? `Última execução em ${formatDateTime(activeCampaign.created_at)}.`
-                    : "Os cards abaixo serão preenchidos assim que você rodar a operação."}
-                </p>
-              </div>
-              {activeCampaign ? (
-                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.18em] text-white/52">
-                  {selectedClient?.name}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="font-heading text-2xl font-semibold">Workspace criativo</h2>
+                  <p className="mt-2 text-sm text-white/56">
+                    {activeCampaign
+                      ? `Ultima execucao em ${formatDateTime(activeCampaign.created_at)}.`
+                      : "Troque entre resultados, pecas visuais, editor e Brand Lab sem empilhar tudo de uma vez."}
+                  </p>
                 </div>
-              ) : null}
+                {activeCampaign ? (
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.18em] text-white/52">
+                    {selectedClient?.name}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap gap-2 rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveWorkspaceView("results")}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition",
+                    activeWorkspaceView === "results"
+                      ? "bg-white text-black"
+                      : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
+                  )}
+                >
+                  <LayoutPanelTop className="h-4 w-4" />
+                  Resultados
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveWorkspaceView("images")}
+                  disabled={!activeCampaign?.results.artDirector}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition",
+                    activeWorkspaceView === "images"
+                      ? "bg-white text-black"
+                      : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white",
+                    !activeCampaign?.results.artDirector && "cursor-not-allowed opacity-40"
+                  )}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Pecas visuais
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveWorkspaceView("editor")}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition",
+                    activeWorkspaceView === "editor"
+                      ? "bg-white text-black"
+                      : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
+                  )}
+                >
+                  <PenLine className="h-4 w-4" />
+                  Editor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveWorkspaceView("brand")}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition",
+                    activeWorkspaceView === "brand"
+                      ? "bg-white text-black"
+                      : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
+                  )}
+                >
+                  <MessageSquareText className="h-4 w-4" />
+                  Brand Lab
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-2">
-            {AGENT_DEFINITIONS.map((agent) => (
-              <div
-                key={agent.key}
-                className={agent.key === "artDirector" ? "xl:col-span-2" : ""}
-              >
-                <AgentResultCard
-                  agent={agent}
-                  loading={isRunning}
-                  client={selectedClient}
-                  content={activeCampaign?.results[agent.key]}
-                />
-              </div>
-            ))}
-          </div>
+          {activeWorkspaceView === "results" ? (
+            <div className="grid gap-5 xl:grid-cols-2">
+              {AGENT_DEFINITIONS.map((agent) => (
+                <div
+                  key={agent.key}
+                  className={agent.key === "artDirector" ? "xl:col-span-2" : ""}
+                >
+                  <AgentResultCard
+                    agent={agent}
+                    loading={isRunning}
+                    client={selectedClient}
+                    content={activeCampaign?.results[agent.key]}
+                    onOpenEditor={
+                      agent.key === "artDirector"
+                        ? () => {
+                            setEditorInstruction(activeCampaign?.results.artDirector ?? "");
+                            setActiveWorkspaceView("editor");
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          ) : null}
 
-          {selectedClient ? (
-            <ImageGenerationPanel
-              artDirectorOutput={activeCampaign?.results.artDirector ?? ""}
+          {selectedClient && activeCampaign?.results.artDirector ? (
+            <div className={cn(activeWorkspaceView === "images" ? "block" : "hidden")}>
+              <ImageGenerationPanel
+                artDirectorOutput={activeCampaign.results.artDirector}
+                client={selectedClient}
+                isVisible={true}
+                onImageGenerated={setLastGeneratedImageUrl}
+              />
+            </div>
+          ) : null}
+
+          {activeWorkspaceView === "editor" && selectedClient ? (
+            <TemplateEditor
               client={selectedClient}
-              isVisible={!!activeCampaign?.results.artDirector}
+              initialAiImageUrl={lastGeneratedImageUrl}
+              initialUserInstruction={editorInstruction}
+              isVisible={true}
             />
           ) : null}
 
-          {selectedClient ? <BrandLabPanel key={selectedClient.id} client={selectedClient} /> : null}
+          {activeWorkspaceView === "brand" && selectedClient ? (
+            <BrandLabPanel key={selectedClient.id} client={selectedClient} />
+          ) : null}
         </div>
       </section>
     </div>

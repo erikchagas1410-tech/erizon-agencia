@@ -1,7 +1,9 @@
 import type { User } from "@supabase/supabase-js";
 
 import type {
+  AITemplateSuggestion,
   AppUser,
+  CanvasTemplate,
   CampaignRecord,
   CampaignResults,
   ClientProfile,
@@ -29,7 +31,8 @@ export function serializeClient(
 ): ClientProfile {
   return {
     ...client,
-    brand_colors: client.brand_colors ?? ""
+    brand_colors: client.brand_colors ?? "",
+    logo_url: client.logo_url ?? null
   };
 }
 
@@ -51,5 +54,36 @@ export function serializeCampaign(
       trafficManager: results.trafficManager ?? "",
       analyst: results.analyst ?? ""
     }
+  };
+}
+
+export function serializeCanvasTemplate(
+  template: Database["public"]["Tables"]["canvas_templates"]["Row"]
+): CanvasTemplate {
+  return {
+    id: template.id,
+    name: template.name,
+    format: template.format,
+    category: template.category as CanvasTemplate["category"],
+    canvasWidth: template.canvas_width,
+    canvasHeight: template.canvas_height,
+    layers: Array.isArray(template.layers)
+      ? (template.layers as unknown as CanvasTemplate["layers"])
+      : [],
+    thumbnail: template.thumbnail ?? undefined,
+    created_at: template.created_at,
+    user_id: template.user_id,
+    client_id: template.client_id ?? undefined,
+    is_default: template.is_default
+  };
+}
+
+export function normalizeAiTemplateSuggestion(
+  suggestion: AITemplateSuggestion
+): AITemplateSuggestion {
+  return {
+    name: suggestion.name,
+    rationale: suggestion.rationale,
+    layers: suggestion.layers
   };
 }

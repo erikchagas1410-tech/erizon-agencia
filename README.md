@@ -67,6 +67,7 @@ npm install
 Copie `.env.local.example` para `.env.local` e preencha:
 
 ```env
+ANTHROPIC_API_KEY=
 GROQ_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -77,6 +78,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ### Observações
 
+- `ANTHROPIC_API_KEY` fica exclusivamente no servidor e alimenta o editor visual com IA.
 - `GROQ_API_KEY` fica exclusivamente no servidor.
 - `SUPABASE_SERVICE_ROLE_KEY` também é server-side only.
 - `NEXT_PUBLIC_APP_URL` deve refletir a URL atual do app local ou de produção.

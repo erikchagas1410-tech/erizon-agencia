@@ -21,17 +21,17 @@ export function CampaignHistory({
           <History className="h-4 w-4 text-white/72" />
         </div>
         <div>
-          <h2 className="font-heading text-xl font-semibold">Histórico por cliente</h2>
+          <h2 className="font-heading text-xl font-semibold">Historico por cliente</h2>
           <p className="text-sm text-white/56">
-            Reabra campanhas anteriores e reutilize a solicitação com um clique.
+            Reabra campanhas anteriores sem alongar a pagina toda.
           </p>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
         {campaigns.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-white/10 bg-white/3 px-4 py-8 text-center text-sm text-white/50">
-            Ainda não existem campanhas para este cliente.
+            Ainda nao existem campanhas para este cliente.
           </div>
         ) : null}
 

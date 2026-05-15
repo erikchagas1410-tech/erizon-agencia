@@ -2,23 +2,34 @@
 
 import type { CSSProperties } from "react";
 import { useState } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  ExternalLink
+} from "lucide-react";
 
 import { buildCanvaSearchUrl } from "@/lib/brand-theme";
 import type { AgentDefinition, ClientProfile } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function AgentResultCard({
   agent,
   content,
   loading,
-  client
+  client,
+  onOpenEditor
 }: {
   agent: AgentDefinition;
   content?: string;
   loading?: boolean;
   client?: ClientProfile | null;
+  onOpenEditor?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const isLongContent = (content?.length || 0) > 900;
 
   async function handleCopy() {
     if (!content) {
@@ -49,7 +60,7 @@ export function AgentResultCard({
       />
 
       <div className="relative z-10">
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <div
               className="mb-3 inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]"
@@ -87,11 +98,52 @@ export function AgentResultCard({
             <div className="h-24 animate-pulse rounded-3xl bg-white/5" />
           </div>
         ) : (
-          <div className="agent-copy text-sm">{content || "Sem conteúdo disponível."}</div>
+          <div className="relative">
+            <div
+              className={cn(
+                "agent-copy overflow-hidden text-sm transition-[max-height] duration-300",
+                expanded ? "max-h-none" : "max-h-[320px]"
+              )}
+            >
+              {content || "Sem conteudo disponivel."}
+            </div>
+
+            {!expanded && isLongContent ? (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#121212] via-[#121212]/92 to-transparent" />
+            ) : null}
+          </div>
         )}
 
+        {isLongContent && !loading ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((current) => !current)}
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/76 transition hover:bg-white/10"
+          >
+            {expanded ? (
+              <>
+                Recolher
+                <ChevronUp className="h-3.5 w-3.5" />
+              </>
+            ) : (
+              <>
+                Ler completo
+                <ChevronDown className="h-3.5 w-3.5" />
+              </>
+            )}
+          </button>
+        ) : null}
+
         {agent.key === "artDirector" && client ? (
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={onOpenEditor}
+              disabled={!onOpenEditor}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Abrir no Editor
+            </button>
             {[
               { label: "Feed", format: "feed" as const },
               { label: "Story", format: "story" as const },

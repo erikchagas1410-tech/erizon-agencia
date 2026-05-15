@@ -1,5 +1,91 @@
 import { z } from "zod";
 
+const colorSlotSchema = z.enum([
+  "primary",
+  "secondary",
+  "accent",
+  "white",
+  "black",
+  "transparent"
+]);
+
+const baseLayerSchema = z.object({
+  id: z.string().min(1),
+  x: z.number(),
+  y: z.number(),
+  width: z.number().nonnegative(),
+  height: z.number().nonnegative(),
+  rotation: z.number(),
+  opacity: z.number().min(0).max(1),
+  locked: z.boolean(),
+  visible: z.boolean(),
+  zIndex: z.number()
+});
+
+const backgroundLayerSchema = baseLayerSchema.extend({
+  type: z.literal("background"),
+  fill: z.string().min(1),
+  gradient: z
+    .object({
+      angle: z.number(),
+      from: z.string().min(1),
+      to: z.string().min(1)
+    })
+    .optional()
+});
+
+const shapeLayerSchema = baseLayerSchema.extend({
+  type: z.literal("shape"),
+  shape: z.enum(["rect", "circle", "triangle", "line"]),
+  fill: z.string().min(1),
+  borderRadius: z.number().min(0),
+  stroke: z
+    .object({
+      color: z.string().min(1),
+      width: z.number().min(0)
+    })
+    .optional()
+});
+
+const textLayerSchema = baseLayerSchema.extend({
+  type: z.literal("text"),
+  content: z.string(),
+  fontFamily: z.string().min(1),
+  fontSize: z.number().min(1),
+  fontWeight: z.union([
+    z.literal(400),
+    z.literal(600),
+    z.literal(700),
+    z.literal(800)
+  ]),
+  color: z.string().min(1),
+  textAlign: z.enum(["left", "center", "right"]),
+  lineHeight: z.number().min(0.5),
+  letterSpacing: z.number(),
+  uppercase: z.boolean()
+});
+
+const imageLayerSchema = baseLayerSchema.extend({
+  type: z.literal("image"),
+  src: z.string(),
+  fit: z.enum(["cover", "contain", "fill"])
+});
+
+const logoLayerSchema = baseLayerSchema.extend({
+  type: z.literal("logo"),
+  fit: z.literal("contain")
+});
+
+export const editorLayerSchema = z.discriminatedUnion("type", [
+  backgroundLayerSchema,
+  shapeLayerSchema,
+  textLayerSchema,
+  imageLayerSchema,
+  logoLayerSchema
+]);
+
+export const editorLayersSchema = z.array(editorLayerSchema);
+
 export const clientPayloadSchema = z.object({
   name: z.string().min(2, "Informe o nome da marca."),
   voice_tone: z.string().min(8, "Descreva o tom de voz."),
@@ -18,7 +104,8 @@ export const clientPayloadSchema = z.object({
   brand_character: z
     .string()
     .min(16, "Descreva o personagem da marca em 2 ou 3 linhas."),
-  brand_colors: z.string()
+  brand_colors: z.string(),
+  logo_url: z.string().trim().max(2048).nullable().optional()
 });
 
 export const agencyRequestSchema = z.object({
@@ -48,3 +135,46 @@ export const brandChatRequestSchema = z.object({
   attachments: z.array(brandAttachmentSchema).max(5),
   history: z.array(brandHistoryMessageSchema).max(16)
 });
+
+export const aiTemplateRequestSchema = z.object({
+  clientId: z.string().uuid("Cliente invalido."),
+  format: z.enum(["feed", "story", "carousel_cover"]),
+  category: z
+    .enum(["institucional", "produto", "promocional", "depoimento", "conteudo"])
+    .or(z.string().min(3).max(48)),
+  userInstruction: z.string().max(4000).optional()
+});
+
+export const aiTemplateAnalyzeRequestSchema = z.object({
+  clientId: z.string().uuid("Cliente invalido."),
+  layers: editorLayersSchema
+});
+
+export const aiTemplateSuggestTextsRequestSchema = z.object({
+  clientId: z.string().uuid("Cliente invalido."),
+  layers: editorLayersSchema,
+  userInstruction: z.string().max(4000).optional()
+});
+
+export const canvasTemplateSaveSchema = z.object({
+  name: z.string().min(2).max(120),
+  format: z.enum(["feed", "story", "carousel_cover"]),
+  category: z.enum([
+    "institucional",
+    "produto",
+    "promocional",
+    "depoimento",
+    "conteudo"
+  ]),
+  layers: editorLayersSchema,
+  canvasWidth: z.number().int().positive(),
+  canvasHeight: z.number().int().positive(),
+  thumbnail: z.string().max(2_000_000).optional(),
+  client_id: z.string().uuid().optional().nullable()
+});
+
+export const canvasTemplateDeleteSchema = z.object({
+  id: z.string().uuid("Template invalido.")
+});
+
+export const colorSlotValueSchema = colorSlotSchema;
