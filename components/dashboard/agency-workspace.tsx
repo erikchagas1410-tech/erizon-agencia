@@ -13,6 +13,7 @@ import { downloadTextFile, formatDateTime } from "@/lib/utils";
 
 import { AgentResultCard } from "./agent-result-card";
 import { CampaignHistory } from "./campaign-history";
+import { ImageGenerationPanel } from "./image-generation-panel";
 
 function buildThemeStyle(client: ClientProfile | null) {
   if (!client) {
@@ -383,6 +384,14 @@ export function AgencyWorkspace({
               </div>
             ))}
           </div>
+
+          {selectedClient ? (
+            <ImageGenerationPanel
+              artDirectorOutput={activeCampaign?.results.artDirector ?? ""}
+              client={selectedClient}
+              isVisible={!!activeCampaign?.results.artDirector}
+            />
+          ) : null}
         </div>
       </section>
     </div>

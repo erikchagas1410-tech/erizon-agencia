@@ -27,7 +27,10 @@ export function serializeUser(user: User): AppUser {
 export function serializeClient(
   client: Database["public"]["Tables"]["clients"]["Row"]
 ): ClientProfile {
-  return client;
+  return {
+    ...client,
+    brand_colors: client.brand_colors ?? ""
+  };
 }
 
 export function serializeCampaign(

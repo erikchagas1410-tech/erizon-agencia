@@ -33,8 +33,8 @@ export function buildPillarsInput(pillars: string[]) {
   return pillars.join("\n");
 }
 
-export function parseBrandColors(value: string) {
-  return value
+export function parseBrandColors(value?: string | null) {
+  return (value ?? "")
     .split(",")
     .map((item) => item.trim())
     .filter((item) => /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item));
