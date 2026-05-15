@@ -1,6 +1,7 @@
 import "server-only";
 
 import { serverEnv } from "@/lib/env";
+import { inferBrandTheme } from "@/lib/brand-theme";
 import { EDITOR_FORMAT_DIMENSIONS } from "@/lib/canvas-templates";
 
 import type {
@@ -18,16 +19,27 @@ const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
 const ANTHROPIC_VERSION = "2023-06-01";
 
 const GENERATE_SYSTEM_PROMPT = [
-  "Voce e um diretor de arte digital especializado em social media.",
-  "Sua funcao e criar layouts de templates em JSON para um editor de canvas.",
-  "O canvas tem coordenadas em pixels absolutos.",
+  "Voce e um diretor de arte digital especializado em social media premium.",
+  "Sua funcao e criar layouts de templates em JSON para um editor de canvas com coordenadas em pixels absolutos.",
   "Retorne APENAS um JSON valido no formato AITemplateSuggestion.",
-  "Nunca inclua explicacoes fora do JSON.",
-  "Use sempre colorSlot ('primary','secondary','accent','white','black') nos campos fill e color.",
-  "Nunca use hex fixo, exceto para elementos neutros realmente necessarios.",
-  "Crie composicoes com profundidade: background + shapes decorativos + area de imagem quando couber + hierarquia tipografica clara + logo.",
-  "Layouts devem ser modernos, premium, elegantes e com boa leitura."
-].join(" ");
+  "Nunca inclua texto, markdown ou explicacoes fora do JSON.",
+  "",
+  "REGRAS DE TIPOGRAFIA OBRIGATORIAS:",
+  "- Use 'Syne' (fontWeight 700 ou 800) para headlines e titulos principais. Use 'DM Sans' (fontWeight 400 ou 600) para subtitulos, descricoes e sign-offs.",
+  "- Feed 1080x1080: headline fontSize entre 64 e 96. Subtitulo entre 28 e 40. Caption entre 20 e 28.",
+  "- Story 1080x1920: headline fontSize entre 72 e 120. Subtitulo entre 32 e 48. Caption entre 22 e 32.",
+  "- Carousel cover 1080x1350: headline fontSize entre 68 e 100. Subtitulo entre 30 e 42. Caption entre 20 e 30.",
+  "- SEMPRE defina lineHeight entre 1.0 e 1.35 para headlines. Entre 1.3 e 1.6 para textos corridos.",
+  "- Use letterSpacing positivo (1 a 4) em headlines uppercase. Use 0 em textos corridos.",
+  "- Campos obrigatorios em cada text layer: content, fontFamily, fontSize, fontWeight, color, textAlign, lineHeight, letterSpacing, uppercase.",
+  "- NUNCA omita fontSize, fontWeight, lineHeight, letterSpacing ou fontFamily em text layers.",
+  "",
+  "REGRAS DE COMPOSICAO:",
+  "- Use sempre colorSlot ('primary','secondary','accent','white','black') nos campos fill e color. NUNCA use hex fixo, exceto em stroke quando necessario.",
+  "- Crie profundidade: background + shapes decorativos + area de imagem quando couber + hierarquia tipografica clara (headline > subtitulo > detalhe) + logo.",
+  "- Posicione o logo sempre visivel no canto superior esquerdo ou direito com width proporcional ao canvas (18-24% da largura).",
+  "- Layouts devem ser modernos, premium, elegantes e com boa leitura."
+].join("\n");
 
 export async function generateAITemplate(
   client: ClientProfile,
@@ -36,24 +48,36 @@ export async function generateAITemplate(
   userInstruction?: string
 ): Promise<AITemplateSuggestion> {
   const dims = EDITOR_FORMAT_DIMENSIONS[format];
+  const theme = inferBrandTheme(client);
   const userPrompt = [
     `Crie um template de ${format} (${dims.width}x${dims.height}px) para a marca '${client.name}'.`,
     `Categoria: ${category}.`,
     userInstruction ? `Instrucao extra: ${userInstruction}.` : null,
-    `Personalidade da marca: ${client.personality}.`,
-    `Estetica visual: ${client.visual_aesthetic}.`,
-    `Paleta declarada: ${client.brand_colors || "nao informada"}.`,
-    `Tom de voz: ${client.voice_tone}.`,
-    `Proposta de valor: ${client.value_proposition}.`,
-    `Personagem da marca: ${client.brand_character}.`,
     "",
-    "Retorne o JSON AITemplateSuggestion com:",
+    "IDENTIDADE DA MARCA:",
+    `- Personalidade: ${client.personality}.`,
+    `- Estetica visual: ${client.visual_aesthetic}.`,
+    `- Tom de voz: ${client.voice_tone}.`,
+    `- Proposta de valor: ${client.value_proposition}.`,
+    `- Personagem: ${client.brand_character}.`,
+    `- Paleta declarada: ${client.brand_colors || "nao informada"}.`,
+    "",
+    "TEMA VISUAL INFERIDO (use como referencia de hierarquia de slots):",
+    `- primary = ${theme.primary}`,
+    `- secondary = ${theme.secondary}`,
+    `- accent = ${theme.accent}`,
+    `- palette = ${theme.palette.join(", ")}`,
+    `- Mood: ${theme.mood}`,
+    `- Fontes base: heading=${theme.typography.heading}, body=${theme.typography.body}`,
+    "",
+    "RETORNE o JSON AITemplateSuggestion com:",
     "- name: nome criativo do template",
     "- rationale: 2 frases explicando por que esse layout funciona para essa marca",
     "- layers: array completo de EditorLayer prontas para renderizacao",
     "",
     `Dimensoes do canvas: width=${dims.width}, height=${dims.height}.`,
-    "Posicione os elementos com x, y, width, height em pixels absolutos."
+    "Posicione todos os elementos com x, y, width, height em pixels absolutos.",
+    "OBRIGATORIO: todo text layer deve ter fontFamily, fontSize, fontWeight, lineHeight e letterSpacing preenchidos."
   ]
     .filter(Boolean)
     .join("\n");
@@ -61,7 +85,7 @@ export async function generateAITemplate(
   const content = await callAnthropic({
     system: GENERATE_SYSTEM_PROMPT,
     user: userPrompt,
-    maxTokens: 2200,
+    maxTokens: 2600,
     temperature: 0.7
   });
 
@@ -323,7 +347,7 @@ function sanitizeLayer(
       type: "text" as const,
       content: typeof layer.content === "string" ? layer.content : "{{brand_name}}",
       fontFamily: typeof layer.fontFamily === "string" ? layer.fontFamily : "Syne",
-      fontSize: clamp(numberOr(layer.fontSize, 42), 12, 180),
+      fontSize: clamp(numberOr(layer.fontSize, 72), 12, 180),
       fontWeight: isFontWeight(layer.fontWeight) ? layer.fontWeight : 700,
       color: typeof layer.color === "string" ? layer.color : "white",
       textAlign: isTextAlign(layer.textAlign) ? layer.textAlign : "left",

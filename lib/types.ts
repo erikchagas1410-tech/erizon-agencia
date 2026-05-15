@@ -194,6 +194,7 @@ export interface ClientFormValues {
   content_pillars: string;
   brand_character: string;
   brand_colors: string;
+  logo_url: string;
 }
 
 export interface AgentDefinition {

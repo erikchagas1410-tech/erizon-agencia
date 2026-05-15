@@ -1,14 +1,16 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { startTransition, useEffect, useMemo, useState } from "react";
-import { Plus, Save, Trash2, Users } from "lucide-react";
+import { Plus, Save, Trash2, Upload, Users, X } from "lucide-react";
 
 import { inferBrandTheme } from "@/lib/brand-theme";
 import { DEFAULT_CLIENT_FORM_VALUES } from "@/lib/constants";
 import type { ClientFormValues, ClientProfile } from "@/lib/types";
 import {
   buildPillarsInput,
+  getInitials,
   parseBrandColors,
   parsePillarsInput,
   toClientPayload
@@ -88,6 +90,84 @@ const FIELD_META: Array<{
   }
 ];
 
+const MAX_LOGO_FILE_SIZE = 2 * 1024 * 1024;
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Nao foi possivel ler a logo enviada."));
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Nao foi possivel ler a logo enviada."));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace("#", "");
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((chunk) => `${chunk}${chunk}`)
+          .join("")
+      : normalized;
+
+  if (expanded.length !== 6) {
+    return null;
+  }
+
+  const value = Number.parseInt(expanded, 16);
+
+  if (Number.isNaN(value)) {
+    return null;
+  }
+
+  return {
+    r: (value >> 16) & 255,
+    g: (value >> 8) & 255,
+    b: value & 255
+  };
+}
+
+function getPreviewTextColor(colors: string[]) {
+  const validColors = colors
+    .map(hexToRgb)
+    .filter((color): color is NonNullable<ReturnType<typeof hexToRgb>> => Boolean(color));
+
+  if (validColors.length === 0) {
+    return "#FFFFFF";
+  }
+
+  const average = validColors.reduce(
+    (accumulator, color) => ({
+      r: accumulator.r + color.r,
+      g: accumulator.g + color.g,
+      b: accumulator.b + color.b
+    }),
+    { r: 0, g: 0, b: 0 }
+  );
+
+  const count = validColors.length;
+  const luminance =
+    (0.2126 * (average.r / count) +
+      0.7152 * (average.g / count) +
+      0.0722 * (average.b / count)) /
+    255;
+
+  return luminance > 0.68 ? "#050505" : "#FFFFFF";
+}
+
 function toFormValues(client: ClientProfile): ClientFormValues {
   return {
     name: client.name,
@@ -102,7 +182,8 @@ function toFormValues(client: ClientProfile): ClientFormValues {
     reason_to_exist: client.reason_to_exist,
     content_pillars: buildPillarsInput(client.content_pillars),
     brand_character: client.brand_character,
-    brand_colors: client.brand_colors
+    brand_colors: client.brand_colors,
+    logo_url: client.logo_url ?? ""
   };
 }
 
@@ -154,7 +235,7 @@ export function ClientManagerWorkspace({
       content_pillars: parsePillarsInput(formValues.content_pillars),
       brand_character: formValues.brand_character,
       brand_colors: formValues.brand_colors,
-      logo_url: selectedClient?.logo_url ?? null
+      logo_url: formValues.logo_url || null
     });
 
     const customPalette = parseBrandColors(formValues.brand_colors);
@@ -175,6 +256,64 @@ export function ClientManagerWorkspace({
   const brandColorSwatches = useMemo(() => {
     return parseBrandColors(formValues.brand_colors);
   }, [formValues.brand_colors]);
+
+  const previewTextColor = useMemo(() => {
+    if (!previewTheme) {
+      return "#FFFFFF";
+    }
+
+    return getPreviewTextColor([
+      previewTheme.primary,
+      previewTheme.secondary,
+      previewTheme.accent
+    ]);
+  }, [previewTheme]);
+
+  const previewMutedTextColor =
+    previewTextColor === "#050505" ? "rgba(5, 5, 5, 0.72)" : "rgba(255, 255, 255, 0.78)";
+
+  async function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setFeedback("Envie uma logo em PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+
+    if (file.size > MAX_LOGO_FILE_SIZE) {
+      setFeedback("A logo precisa ter at\u00e9 2 MB.");
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+
+      setFormValues((current) => ({
+        ...current,
+        logo_url: dataUrl
+      }));
+      setFeedback("Logo carregada. Salve o cliente para usar a marca nas pe\u00e7as.");
+    } catch (error) {
+      setFeedback(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel carregar a logo."
+      );
+    }
+  }
+
+  function handleRemoveLogo() {
+    setFormValues((current) => ({
+      ...current,
+      logo_url: ""
+    }));
+    setFeedback("Logo removida do formul\u00e1rio. Salve para confirmar a altera\u00e7\u00e3o.");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -289,8 +428,86 @@ export function ClientManagerWorkspace({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.88fr,1.12fr]">
-      <section className="space-y-6">
+    <div className="space-y-6">
+      <section className="grid gap-6 2xl:grid-cols-[1.12fr,0.88fr]">
+        <div className="glass-panel neon-border rounded-[2rem] p-6 sm:p-7">
+          <span className="section-kicker">
+            <Users className="h-3.5 w-3.5" />
+            Biblioteca de Marca
+          </span>
+
+          <div className="mt-5">
+            <h1 className="max-w-3xl font-heading text-3xl font-semibold leading-tight sm:text-[2.7rem]">
+              Organize clientes, identidade visual e briefing completo em uma unica
+              base facil de consultar.
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-white/66 sm:text-base">
+              A pagina foi separada em dois lados claros: biblioteca e preview da
+              marca de um lado, formulario e edicao do outro.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
+                Clientes
+              </div>
+              <div className="mt-3 font-heading text-2xl font-semibold text-white">
+                {clients.length}
+              </div>
+              <div className="mt-1 text-sm text-white/52">marcas salvas na conta</div>
+            </div>
+            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
+                Em foco
+              </div>
+              <div className="mt-3 font-heading text-2xl font-semibold text-white">
+                {selectedClient ? "Editando" : "Novo"}
+              </div>
+              <div className="mt-1 text-sm text-white/52">
+                {selectedClient ? selectedClient.name : "cadastro em branco"}
+              </div>
+            </div>
+            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
+              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
+                Visual
+              </div>
+              <div className="mt-3 font-heading text-2xl font-semibold text-white">
+                {previewTheme ? "Ativo" : "Aguardando"}
+              </div>
+              <div className="mt-1 text-sm text-white/52">
+                preview da identidade em tempo real
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-[2rem] p-6">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/36">
+            Leitura rapida
+          </div>
+          <div className="mt-4 grid gap-3">
+            {[
+              "Escolha uma marca na biblioteca para revisar ou atualizar o briefing.",
+              "Veja as cores e a logo reagirem no preview antes de salvar.",
+              "Mantenha a identidade completa para o sistema inteiro trabalhar com menos friccao."
+            ].map((item, index) => (
+              <div
+                key={item}
+                className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] px-4 py-4"
+              >
+                <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
+                  Etapa {index + 1}
+                </div>
+                <div className="text-sm leading-6 text-white/72">{item}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[0.88fr,1.12fr]">
+        <section className="space-y-6 xl:sticky xl:top-8 xl:self-start">
         <div className="glass-panel neon-border rounded-[2rem] p-6">
           <div className="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -369,22 +586,134 @@ export function ClientManagerWorkspace({
               </p>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-3">
-              {previewTheme.palette.map((color) => (
-                <div key={color} className="space-y-2">
+            <div
+              className="relative overflow-hidden rounded-[1.6rem] border p-5"
+              style={{
+                borderColor: `${previewTheme.accent}55`,
+                background: `linear-gradient(135deg, ${previewTheme.primary} 0%, ${previewTheme.secondary} 58%, ${previewTheme.accent} 100%)`
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    previewTextColor === "#050505"
+                      ? "linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))"
+                      : "linear-gradient(180deg, rgba(5,5,5,0.04), rgba(5,5,5,0.28))"
+                }}
+              />
+
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="max-w-[18rem]">
                   <div
-                    className="h-12 w-12 rounded-2xl border border-white/10"
-                    style={{ backgroundColor: color }}
-                  />
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-white/36">
-                    {color}
+                    className="text-[10px] uppercase tracking-[0.24em]"
+                    style={{ color: previewMutedTextColor }}
+                  >
+                    identidade ativa
+                  </div>
+                  <div
+                    className="mt-3 text-2xl font-semibold leading-tight"
+                    style={{ color: previewTextColor }}
+                  >
+                    {formValues.name}
+                  </div>
+                  <div className="mt-3 text-sm leading-6" style={{ color: previewMutedTextColor }}>
+                    {formValues.visual_aesthetic || previewTheme.mood}
                   </div>
                 </div>
-              ))}
-            </div>
 
-            <div className="text-sm text-white/74">
-              <strong className="text-white">Atmosfera:</strong> {previewTheme.mood}
+                <div
+                  className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border backdrop-blur-sm"
+                  style={{
+                    borderColor:
+                      previewTextColor === "#050505"
+                        ? "rgba(5, 5, 5, 0.1)"
+                        : "rgba(255, 255, 255, 0.22)",
+                    backgroundColor:
+                      previewTextColor === "#050505"
+                        ? "rgba(255, 255, 255, 0.74)"
+                        : "rgba(255, 255, 255, 0.16)"
+                  }}
+                >
+                  {formValues.logo_url ? (
+                    <img
+                      src={formValues.logo_url}
+                      alt={`Logo de ${formValues.name}`}
+                      className="h-full w-full object-contain p-3"
+                    />
+                  ) : (
+                    <span
+                      className="text-2xl font-semibold"
+                      style={{ color: previewTextColor }}
+                    >
+                      {getInitials(formValues.name) || "MK"}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="relative mt-6 grid gap-3 sm:grid-cols-[1.15fr,0.85fr]">
+                <div
+                  className="rounded-[1.35rem] border p-4 backdrop-blur-sm"
+                  style={{
+                    borderColor:
+                      previewTextColor === "#050505"
+                        ? "rgba(5, 5, 5, 0.1)"
+                        : "rgba(255, 255, 255, 0.16)",
+                    backgroundColor:
+                      previewTextColor === "#050505"
+                        ? "rgba(255, 255, 255, 0.3)"
+                        : "rgba(5, 5, 5, 0.2)"
+                  }}
+                >
+                  <div
+                    className="text-[10px] uppercase tracking-[0.2em]"
+                    style={{ color: previewMutedTextColor }}
+                  >
+                    atmosfera
+                  </div>
+                  <div className="mt-3 text-sm leading-6" style={{ color: previewTextColor }}>
+                    {previewTheme.mood}
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div
+                      className="h-3 w-16 rounded-full"
+                      style={{ backgroundColor: previewTheme.primary }}
+                    />
+                    <div
+                      className="h-3 w-10 rounded-full"
+                      style={{ backgroundColor: previewTheme.accent }}
+                    />
+                    <div
+                      className="h-3 w-6 rounded-full"
+                      style={{ backgroundColor: previewTheme.secondary }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  {previewTheme.palette.map((color, index) => (
+                    <div key={`${color}-${index}`} className="space-y-2">
+                      <div
+                        className="h-12 w-12 rounded-2xl border"
+                        style={{
+                          backgroundColor: color,
+                          borderColor:
+                            previewTextColor === "#050505"
+                              ? "rgba(5, 5, 5, 0.08)"
+                              : "rgba(255, 255, 255, 0.18)"
+                        }}
+                      />
+                      <div
+                        className="text-[10px] uppercase tracking-[0.14em]"
+                        style={{ color: previewMutedTextColor }}
+                      >
+                        {color}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
@@ -475,6 +804,67 @@ export function ClientManagerWorkspace({
               );
             })}
 
+            <div className="block space-y-3 sm:col-span-2">
+              <span className="text-sm font-medium text-white/84">Logo da Marca</span>
+
+              <div className="rounded-[1.5rem] border border-dashed border-white/12 bg-white/[0.03] p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04]">
+                      {formValues.logo_url ? (
+                        <img
+                          src={formValues.logo_url}
+                          alt={`Logo de ${formValues.name || "cliente"}`}
+                          className="h-full w-full object-contain p-3"
+                        />
+                      ) : (
+                        <div className="text-center text-xs leading-5 text-white/42">
+                          Sem
+                          <br />
+                          logo
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="max-w-md">
+                      <div className="text-sm font-medium text-white">
+                        Upload direto para a identidade da marca
+                      </div>
+                      <div className="mt-1 text-sm text-white/58">
+                        Envie PNG, JPG, WEBP ou SVG com atÃ© 2 MB. A logo passa a
+                        aparecer no preview imediatamente e pode ser usada nas peÃ§as
+                        geradas.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]">
+                      <Upload className="h-4 w-4" />
+                      {formValues.logo_url ? "Trocar logo" : "Enviar logo"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                    </label>
+
+                    {formValues.logo_url ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/82 transition hover:bg-white/[0.08]"
+                      >
+                        <X className="h-4 w-4" />
+                        Remover
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <label className="block space-y-2 sm:col-span-2">
               <span className="text-sm font-medium text-white/84">
                 Paleta de Cores da Marca
@@ -494,9 +884,9 @@ export function ClientManagerWorkspace({
 
               {brandColorSwatches.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {brandColorSwatches.map((color) => (
+                  {brandColorSwatches.map((color, index) => (
                     <div
-                      key={color}
+                      key={`${color}-${index}`}
                       className="h-10 w-10 rounded-xl border border-white/10 flex-shrink-0"
                       style={{ backgroundColor: color }}
                       title={color}
@@ -520,7 +910,8 @@ export function ClientManagerWorkspace({
                 : "Criar cliente"}
           </button>
         </form>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

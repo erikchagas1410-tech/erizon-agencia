@@ -105,7 +105,7 @@ export const clientPayloadSchema = z.object({
     .string()
     .min(16, "Descreva o personagem da marca em 2 ou 3 linhas."),
   brand_colors: z.string(),
-  logo_url: z.string().trim().max(2048).nullable().optional()
+  logo_url: z.string().trim().max(3_000_000).nullable().optional()
 });
 
 export const agencyRequestSchema = z.object({

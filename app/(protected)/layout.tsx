@@ -20,11 +20,13 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen lg:grid lg:grid-cols-[300px,minmax(0,1fr)]">
       <AppHeader user={serializeUser(user)} />
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <div className="min-w-0">
+        <main className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 pb-10 pt-6 sm:px-6 lg:px-8 xl:px-10">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
