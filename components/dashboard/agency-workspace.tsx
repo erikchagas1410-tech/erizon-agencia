@@ -55,8 +55,8 @@ const WORKSPACE_VIEWS = [
   },
   {
     key: "images",
-    label: "Pecas visuais",
-    description: "Transforme a direcao visual em pecas com imagem e logo da marca.",
+    label: "Criar peça",
+    description: "Gere com IA ou crie manualmente no editor de canvas.",
     icon: ImageIcon
   },
   {
@@ -92,6 +92,7 @@ export function AgencyWorkspace({
     useState<WorkspaceView>("results");
   const [lastGeneratedImageUrl, setLastGeneratedImageUrl] = useState("");
   const [editorInstruction, setEditorInstruction] = useState("");
+  const [showFullArtBrief, setShowFullArtBrief] = useState(false);
 
   const selectedClient = useMemo(
     () => initialClients.find((client) => client.id === selectedClientId) || null,
@@ -129,6 +130,18 @@ export function AgencyWorkspace({
     ).length;
   }, [activeCampaign]);
 
+  const artDirectorBrief = activeCampaign?.results.artDirector?.trim() || "";
+  const hasArtDirectorBrief = artDirectorBrief.length > 0;
+  const artDirectorPreview = useMemo(() => {
+    if (!hasArtDirectorBrief) {
+      return "";
+    }
+
+    return artDirectorBrief.length > 400
+      ? `${artDirectorBrief.slice(0, 400).trimEnd()}...`
+      : artDirectorBrief;
+  }, [artDirectorBrief, hasArtDirectorBrief]);
+
   useEffect(() => {
     if (!clientCampaigns.length) {
       setActiveCampaignId(null);
@@ -155,6 +168,7 @@ export function AgencyWorkspace({
   useEffect(() => {
     setLastGeneratedImageUrl("");
     setEditorInstruction("");
+    setShowFullArtBrief(false);
   }, [activeCampaign?.id, selectedClientId]);
 
   async function handleGenerate() {
@@ -213,6 +227,11 @@ export function AgencyWorkspace({
       `${selectedClient.name.toLowerCase().replace(/\s+/g, "-")}-${activeCampaign.id}.md`,
       buildCampaignMarkdown(selectedClient, activeCampaign)
     );
+  }
+
+  function openEditorWithInstruction(instruction?: string) {
+    setEditorInstruction(instruction ?? "");
+    setActiveWorkspaceView("editor");
   }
 
   if (initialClients.length === 0) {
@@ -579,21 +598,17 @@ export function AgencyWorkspace({
               <div className="flex flex-wrap gap-2 rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-2">
                 {WORKSPACE_VIEWS.map((view) => {
                   const Icon = view.icon;
-                  const disabled =
-                    view.key === "images" && !activeCampaign?.results.artDirector;
 
                   return (
                     <button
                       key={view.key}
                       type="button"
                       onClick={() => setActiveWorkspaceView(view.key)}
-                      disabled={disabled}
                       className={cn(
                         "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium transition",
                         activeWorkspaceView === view.key
                           ? "bg-white text-black"
-                          : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white",
-                        disabled && "cursor-not-allowed opacity-40"
+                          : "bg-transparent text-white/70 hover:bg-white/8 hover:text-white"
                       )}
                     >
                       <Icon className="h-4 w-4" />
@@ -653,10 +668,7 @@ export function AgencyWorkspace({
                     content={activeCampaign?.results[agent.key]}
                     onOpenEditor={
                       agent.key === "artDirector"
-                        ? () => {
-                            setEditorInstruction(activeCampaign?.results.artDirector ?? "");
-                            setActiveWorkspaceView("editor");
-                          }
+                        ? () => openEditorWithInstruction(activeCampaign?.results.artDirector)
                         : undefined
                     }
                   />
@@ -665,22 +677,104 @@ export function AgencyWorkspace({
             </div>
           ) : null}
 
-          {activeWorkspaceView === "images" && selectedClient && activeCampaign?.results.artDirector ? (
-            <ImageGenerationPanel
-              artDirectorOutput={activeCampaign.results.artDirector}
-              client={selectedClient}
-              isVisible={true}
-              onImageGenerated={setLastGeneratedImageUrl}
-            />
+          {activeWorkspaceView === "images" && selectedClient && hasArtDirectorBrief ? (
+            <div className="glass-panel rounded-[1.75rem] p-6">
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/36">
+                      Direcao criativa pronta
+                    </div>
+                    <h3 className="mt-2 font-heading text-2xl font-semibold">
+                      Crie a peça no Editor
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58">
+                      O Pollinations funciona melhor como referência de fundo. Para
+                      tipografia legível, hierarquia de copy e identidade real da marca,
+                      use o Editor com o brief do Art Director.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => openEditorWithInstruction(activeCampaign.results.artDirector)}
+                    className="inline-flex items-center justify-center gap-2 rounded-[1.2rem] bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                  >
+                    Criar peça no Editor
+                    <PenLine className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/38">
+                        Brief do Art Director
+                      </div>
+                      <div className="mt-1 text-sm text-white/54">
+                        Base criativa usada para montar a peça no editor.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="agent-copy text-sm">
+                    {showFullArtBrief ? artDirectorBrief : artDirectorPreview}
+                  </div>
+
+                  {artDirectorBrief.length > 400 ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowFullArtBrief((current) => !current)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/76 transition hover:bg-white/10"
+                    >
+                      {showFullArtBrief ? "Ver menos" : "Ver mais"}
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-heading text-lg font-semibold">Referência visual</h4>
+                    <p className="mt-2 text-sm text-white/54">
+                      Gere uma imagem de referência de fundo para usar como asset no editor.
+                    </p>
+                  </div>
+
+                  <ImageGenerationPanel
+                    artDirectorOutput={activeCampaign.results.artDirector}
+                    client={selectedClient}
+                    isVisible={true}
+                    singleFormat="feed"
+                    onImageGenerated={setLastGeneratedImageUrl}
+                  />
+                </div>
+              </div>
+            </div>
           ) : null}
 
-          {activeWorkspaceView === "images" && !activeCampaign?.results.artDirector ? (
+          {activeWorkspaceView === "images" && selectedClient && !hasArtDirectorBrief ? (
             <div className="glass-panel rounded-[1.75rem] p-6">
-              <h3 className="font-heading text-2xl font-semibold">Pecas visuais indisponiveis</h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/60">
-                Gere ou abra uma campanha com direcao visual do Art Director para usar
-                a etapa de imagens.
-              </p>
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04]">
+                  <PenLine className="h-5 w-5 text-white/72" />
+                </div>
+                <div>
+                  <h3 className="font-heading text-2xl font-semibold">Crie sua peça no Editor</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/60">
+                    Rode a squad primeiro para obter a direção do Art Director, ou vá
+                    direto ao Editor para criar livremente.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => openEditorWithInstruction("")}
+                    className="mt-5 inline-flex items-center gap-2 rounded-[1.2rem] bg-white px-5 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                  >
+                    Abrir Editor
+                    <PenLine className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           ) : null}
 

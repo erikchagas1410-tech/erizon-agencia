@@ -14,6 +14,7 @@ import {
   type ImageFormat
 } from "@/lib/pollinations";
 import type { ClientProfile } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface ImageState {
   format: ImageFormat;
@@ -22,8 +23,8 @@ interface ImageState {
   error: boolean;
 }
 
-function buildInitialState(): ImageState[] {
-  return IMAGE_FORMATS.map((format) => ({
+function buildInitialState(formats: ImageFormat[]): ImageState[] {
+  return formats.map((format) => ({
     format,
     url: null,
     loading: false,
@@ -48,14 +49,22 @@ export function ImageGenerationPanel({
   artDirectorOutput,
   client,
   isVisible,
-  onImageGenerated
+  onImageGenerated,
+  singleFormat
 }: {
   artDirectorOutput: string;
   client: ClientProfile;
   isVisible: boolean;
   onImageGenerated?: (url: string) => void;
+  singleFormat?: ImageFormat;
 }) {
-  const [images, setImages] = useState<ImageState[]>(buildInitialState);
+  const formatsToUse = useMemo(
+    () => (singleFormat ? [singleFormat] : IMAGE_FORMATS),
+    [singleFormat]
+  );
+
+  const isReferenceMode = Boolean(singleFormat);
+  const [images, setImages] = useState<ImageState[]>(() => buildInitialState(formatsToUse));
   const [round, setRound] = useState(0);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(client.logo_url ?? null);
@@ -66,14 +75,14 @@ export function ImageGenerationPanel({
   const [logoFeedback, setLogoFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    setImages(buildInitialState());
+    setImages(buildInitialState(formatsToUse));
     setRound(0);
     setHasGenerated(false);
     setLogoUrl(client.logo_url ?? null);
     setLogoPosition("bottom-right");
     setComposited({});
     setLogoFeedback(null);
-  }, [artDirectorOutput, client.id, client.logo_url]);
+  }, [artDirectorOutput, client.id, client.logo_url, formatsToUse]);
 
   const hasReadyImages = useMemo(
     () => images.some((img) => !!img.url && !img.loading),
@@ -174,13 +183,13 @@ export function ImageGenerationPanel({
     setLogoFeedback(null);
     setComposited({});
 
-    IMAGE_FORMATS.forEach((format, index) => {
+    formatsToUse.forEach((format, index) => {
       generateSingle(format, index, nextRound);
     });
   }
 
   async function regenerateSingle(format: ImageFormat) {
-    const index = IMAGE_FORMATS.indexOf(format);
+    const index = formatsToUse.indexOf(format);
     const singleRound = round + index + 10;
     setLogoFeedback(null);
     setComposited((current) => removeCompositedFormat(current, format));
@@ -190,20 +199,21 @@ export function ImageGenerationPanel({
   const isAnyLoading = images.some((img) => img.loading);
 
   return (
-    <div className="glass-panel rounded-[2rem] p-6 space-y-6">
+    <div className={cn("glass-panel space-y-6 rounded-[2rem] p-6", isReferenceMode && "p-5")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <span className="section-kicker">
             <Sparkles className="h-3.5 w-3.5" />
-            Pecas Visuais
+            {isReferenceMode ? "Referencia visual" : "Pecas Visuais"}
           </span>
           <h2 className="mt-3 font-heading text-2xl font-semibold">
-            Imagens geradas pela IA
+            {isReferenceMode ? "Imagem de fundo por IA" : "Imagens geradas pela IA"}
           </h2>
           <p className="mt-2 text-sm text-white/56">
-            Cada prompt usa primeiro a direcao do Art Director e depois o contexto
-            da marca para gerar a peca.
-            {hasGenerated ? (
+            {isReferenceMode
+              ? "Use esta imagem como apoio visual dentro do editor. O texto final deve ser montado no canvas com tipografia real."
+              : "Cada prompt usa primeiro a direcao do Art Director e depois o contexto da marca para gerar a peca."}
+            {hasGenerated && !isReferenceMode ? (
               <span className="ml-1 text-white/36">
                 Gere novamente para buscar novas interpretacoes do mesmo brief.
               </span>
@@ -221,12 +231,16 @@ export function ImageGenerationPanel({
           {isAnyLoading
             ? "Gerando..."
             : hasGenerated
-              ? "Gerar novamente"
-              : "Gerar pecas"}
+              ? isReferenceMode
+                ? "Gerar nova referencia"
+                : "Gerar novamente"
+              : isReferenceMode
+                ? "Gerar referencia"
+                : "Gerar pecas"}
         </button>
       </div>
 
-      {hasReadyImages ? (
+      {hasReadyImages && !isReferenceMode ? (
         <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -302,7 +316,7 @@ export function ImageGenerationPanel({
         </div>
       ) : null}
 
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className={cn("grid gap-5", isReferenceMode ? "grid-cols-1" : "sm:grid-cols-3")}>
         {images.map((img) => {
           const displayUrl = composited[img.format] ?? img.url;
 
@@ -335,7 +349,7 @@ export function ImageGenerationPanel({
                       <Wand2 className="h-5 w-5 text-white/20" />
                     </div>
                     <span className="text-xs text-white/30">
-                      Clique em gerar pecas
+                      {isReferenceMode ? "Clique em gerar referencia" : "Clique em gerar pecas"}
                     </span>
                   </div>
                 ) : null}
@@ -351,14 +365,11 @@ export function ImageGenerationPanel({
                 ) : null}
 
                 {displayUrl && !img.loading ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={displayUrl}
-                      alt={getFormatLabel(img.format)}
-                      className="h-full w-full object-cover transition-opacity duration-500"
-                    />
-                  </>
+                  <img
+                    src={displayUrl}
+                    alt={getFormatLabel(img.format)}
+                    className="h-full w-full object-cover transition-opacity duration-500"
+                  />
                 ) : null}
 
                 {img.error && !img.loading ? (
