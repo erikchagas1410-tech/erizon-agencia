@@ -4,6 +4,7 @@
 # next
 /.next
 /out
+.generated
 *.tsbuildinfo
 *.zip
 

@@ -54,10 +54,7 @@ function parseMarkdown(text: string) {
   while (index < lines.length) {
     const line = lines[index].trim();
 
-    if (!line) {
-      index += 1;
-      continue;
-    }
+    if (!line) { index += 1; continue; }
 
     if (/^---+$/.test(line)) {
       blocks.push({ type: "divider" });
@@ -67,58 +64,39 @@ function parseMarkdown(text: string) {
 
     const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
     if (headingMatch) {
-      blocks.push({
-        type: "heading",
-        level: headingMatch[1].length,
-        text: headingMatch[2].trim()
-      });
+      blocks.push({ type: "heading", level: headingMatch[1].length, text: headingMatch[2].trim() });
       index += 1;
       continue;
     }
 
-    const listMatch = line.match(/^([-*]|\d+[.)])\s+(.*)$/);
+    const listMatch = line.match(/^([-*]|\d+[.)]) (.*)$/);
     if (listMatch) {
       const ordered = /\d/.test(listMatch[1]);
       const items: string[] = [];
-
       while (index < lines.length) {
         const candidate = lines[index].trim();
-        const candidateMatch = candidate.match(/^([-*]|\d+[.)])\s+(.*)$/);
-
-        if (!candidateMatch) {
-          break;
-        }
-
+        const candidateMatch = candidate.match(/^([-*]|\d+[.)]) (.*)$/);
+        if (!candidateMatch) break;
         items.push(candidateMatch[2].trim());
         index += 1;
       }
-
       blocks.push({ type: "list", ordered, items });
       continue;
     }
 
     const paragraphLines: string[] = [];
-
     while (index < lines.length) {
       const candidate = lines[index].trim();
-
       if (
         !candidate ||
         /^---+$/.test(candidate) ||
         /^(#{1,6})\s+/.test(candidate) ||
-        /^([-*]|\d+[.)])\s+/.test(candidate)
-      ) {
-        break;
-      }
-
+        /^([-*]|\d+[.)]) /.test(candidate)
+      ) break;
       paragraphLines.push(candidate);
       index += 1;
     }
-
-    blocks.push({
-      type: "paragraph",
-      text: paragraphLines.join(" ")
-    });
+    blocks.push({ type: "paragraph", text: paragraphLines.join(" ") });
   }
 
   return blocks;
@@ -140,38 +118,59 @@ export function AgentMarkdown({
           return (
             <div
               key={`divider-${blockIndex}`}
-              className="my-5 border-t border-[var(--color-border)]"
+              className="my-6 border-t border-[var(--color-border)]"
             />
           );
         }
 
         if (block.type === "heading") {
-          const headingClass =
-            block.level <= 2
-              ? "text-base font-semibold text-[var(--color-text-1)]"
-              : "text-sm font-semibold text-[var(--color-text-1)]";
+          // H1/H2 — section title style
+          if (block.level <= 2) {
+            return (
+              <div
+                key={`heading-${blockIndex}`}
+                className="mb-3 mt-7 first:mt-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-primary-light)] px-4 py-2.5"
+              >
+                <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--color-primary)]">
+                  {renderInline(block.text)}
+                </h4>
+              </div>
+            );
+          }
 
+          // H3/H4 — subsection
           return (
-            <h4 key={`heading-${blockIndex}`} className={`mt-5 first:mt-0 ${headingClass}`}>
+            <h5
+              key={`heading-${blockIndex}`}
+              className="mb-2 mt-5 first:mt-0 text-sm font-semibold text-[var(--color-text-1)]"
+            >
               {renderInline(block.text)}
-            </h4>
+            </h5>
           );
         }
 
         if (block.type === "list") {
           const ListTag = block.ordered ? "ol" : "ul";
-
           return (
             <ListTag
               key={`list-${blockIndex}`}
               className={
                 block.ordered
                   ? "mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-[var(--color-text-2)]"
-                  : "mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--color-text-2)]"
+                  : "mt-3 space-y-2 pl-4 text-sm leading-7 text-[var(--color-text-2)]"
               }
             >
               {block.items.map((item, itemIndex) => (
-                <li key={`item-${blockIndex}-${itemIndex}`}>{renderInline(item)}</li>
+                <li
+                  key={`item-${blockIndex}-${itemIndex}`}
+                  className={
+                    block.ordered
+                      ? ""
+                      : "flex items-start gap-2 before:mt-2 before:h-1.5 before:w-1.5 before:flex-shrink-0 before:rounded-full before:bg-[var(--color-primary)] before:opacity-60"
+                  }
+                >
+                  <span>{renderInline(item)}</span>
+                </li>
               ))}
             </ListTag>
           );

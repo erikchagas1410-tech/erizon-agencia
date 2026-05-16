@@ -1,0 +1,29 @@
+
+> ai-agency-os@0.1.0 dev
+> next dev -p 3011
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3011
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.5s
+ ✓ Compiled /middleware in 346ms
+ ✓ Compiled (126 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 8.6s (688 modules)
+ GET /login 200 in 9204ms
+ ○ Compiling /api/creative-render/generate ...
+ POST /api/creative-render/generate 500 in 10417ms
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3011
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.2s
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3011
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.4s

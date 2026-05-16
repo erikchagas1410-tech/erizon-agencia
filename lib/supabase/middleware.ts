@@ -4,7 +4,7 @@ import {
 } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/api/creative-render"];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({

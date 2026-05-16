@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { CSSProperties } from "react";
 import { startTransition, useEffect, useMemo, useState } from "react";
@@ -32,12 +32,8 @@ import {
 } from "./workflow-stepper";
 
 function buildThemeStyle(client: ClientProfile | null) {
-  if (!client) {
-    return undefined;
-  }
-
+  if (!client) return undefined;
   const theme = inferBrandTheme(client);
-
   return {
     "--brand-primary": theme.primary,
     "--brand-secondary": theme.secondary,
@@ -47,6 +43,7 @@ function buildThemeStyle(client: ClientProfile | null) {
   } as CSSProperties;
 }
 
+// The 4 operational agents shown in tab view
 const RESULT_AGENT_KEYS: AgentKey[] = [
   "strategist",
   "copywriter",
@@ -72,6 +69,8 @@ export function AgencyWorkspace({
   const [activeWorkflowStep, setActiveWorkflowStep] = useState<WorkflowStepKey>("briefing");
   const [lastGeneratedImageUrl, setLastGeneratedImageUrl] = useState("");
   const [editorInstruction, setEditorInstruction] = useState("");
+  // Active agent tab — default to first agent
+  const [activeAgentTab, setActiveAgentTab] = useState<AgentKey>(RESULT_AGENT_KEYS[0]);
 
   const selectedClient = useMemo(
     () => initialClients.find((client) => client.id === selectedClientId) || null,
@@ -97,10 +96,7 @@ export function AgencyWorkspace({
   );
 
   const completedAgentsCount = useMemo(() => {
-    if (!activeCampaign) {
-      return 0;
-    }
-
+    if (!activeCampaign) return 0;
     return AGENT_DEFINITIONS.filter((agent) =>
       Boolean(activeCampaign.results[agent.key]?.trim())
     ).length;
@@ -115,21 +111,14 @@ export function AgencyWorkspace({
       setActiveWorkflowStep("briefing");
       return;
     }
-
     if (!activeCampaignId || !clientCampaigns.some((item) => item.id === activeCampaignId)) {
       setActiveCampaignId(clientCampaigns[0].id);
     }
   }, [activeCampaignId, clientCampaigns]);
 
   useEffect(() => {
-    if (!feedback) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setFeedback(null);
-    }, 2800);
-
+    if (!feedback) return;
+    const timeout = window.setTimeout(() => setFeedback(null), 2800);
     return () => window.clearTimeout(timeout);
   }, [feedback]);
 
@@ -143,33 +132,20 @@ export function AgencyWorkspace({
       setFeedback("Selecione um cliente e escreva a solicitacao.");
       return;
     }
-
     setIsRunning(true);
     setFeedback(null);
-
     try {
       const response = await fetch("/api/agency", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          clientId: selectedClientId,
-          request: requestText.trim()
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: selectedClientId, request: requestText.trim() })
       });
-
       const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "Falha ao acionar a squad.");
-      }
-
+      if (!response.ok) throw new Error(payload.error || "Falha ao acionar a squad.");
       startTransition(() => {
         setCampaigns((current) => [payload.campaign, ...current]);
         setActiveCampaignId(payload.campaign.id);
       });
-
       setActiveWorkflowStep("strategy");
       setFeedback("Squad concluida e campanha salva no historico.");
     } catch (error) {
@@ -186,10 +162,7 @@ export function AgencyWorkspace({
   }
 
   function handleExport() {
-    if (!selectedClient || !activeCampaign) {
-      return;
-    }
-
+    if (!selectedClient || !activeCampaign) return;
     downloadTextFile(
       `${selectedClient.name.toLowerCase().replace(/\s+/g, "-")}-${activeCampaign.id}.md`,
       buildCampaignMarkdown(selectedClient, activeCampaign)
@@ -202,44 +175,25 @@ export function AgencyWorkspace({
   }
 
   function handleStepChange(step: WorkflowStepKey) {
-    if (step === "briefing") {
-      setActiveWorkflowStep(step);
-      return;
-    }
-
+    if (step === "briefing") { setActiveWorkflowStep(step); return; }
     if (!activeCampaign) {
       setFeedback("Rode a squad primeiro para liberar as proximas etapas.");
       return;
     }
-
     if ((step === "visuals" || step === "editor") && !hasArtDirectorBrief) {
       setFeedback("O brief do Art Director ainda nao esta disponivel.");
       return;
     }
-
     setActiveWorkflowStep(step);
   }
 
   function getWorkflowStatus(step: WorkflowStepKey) {
     const activeIndex = STEP_ORDER.indexOf(activeWorkflowStep);
     const stepIndex = STEP_ORDER.indexOf(step);
-
-    if (step === activeWorkflowStep) {
-      return "active" as const;
-    }
-
-    if (stepIndex < activeIndex) {
-      return "complete" as const;
-    }
-
-    if (step === "briefing" && selectedClientId && requestText.trim()) {
-      return "complete" as const;
-    }
-
-    if (step === "strategy" && activeCampaign) {
-      return "complete" as const;
-    }
-
+    if (step === activeWorkflowStep) return "active" as const;
+    if (stepIndex < activeIndex) return "complete" as const;
+    if (step === "briefing" && selectedClientId && requestText.trim()) return "complete" as const;
+    if (step === "strategy" && activeCampaign) return "complete" as const;
     return "pending" as const;
   }
 
@@ -260,12 +214,10 @@ export function AgencyWorkspace({
                 e reduzir ruido antes de disparar a squad.
               </p>
             </div>
-
             <div className="rounded-[1.35rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
               {selectedClient ? `Cliente ativo: ${selectedClient.name}` : "Selecione uma marca"}
             </div>
           </div>
-
           <div className="mt-5 flex flex-wrap gap-2">
             {REQUEST_SUGGESTIONS.map((suggestion) => (
               <button
@@ -294,11 +246,10 @@ export function AgencyWorkspace({
                 Estrategia e leitura dos agentes
               </h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-2)]">
-                Os cards ja estao separados por papel. Use o painel do Art Director para
-                sair do texto e avancar para visuals, editor ou revisao final.
+                Os agentes ficam separados em abas — clique em cada uma para ler o
+                resultado completo sem scroll excessivo.
               </p>
             </div>
-
             <div className="grid gap-3 sm:grid-cols-3">
               <button
                 type="button"
@@ -340,11 +291,9 @@ export function AgencyWorkspace({
               Visuals em foco
             </h3>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-text-2)]">
-              Gere backgrounds de apoio e variacoes visuais para alimentar o editor com
-              mais repertorio.
+              Gere backgrounds de apoio e variacoes visuais para alimentar o editor com mais repertorio.
             </p>
           </div>
-
           {hasArtDirectorBrief ? (
             <ImageGenerationPanel
               artDirectorOutput={activeCampaign?.results.artDirector || ""}
@@ -375,7 +324,6 @@ export function AgencyWorkspace({
               Monte a peca final com copy, hierarquia e identidade real da marca.
             </p>
           </div>
-
           <TemplateEditor
             client={selectedClient}
             initialAiImageUrl={lastGeneratedImageUrl}
@@ -403,7 +351,6 @@ export function AgencyWorkspace({
                   final com contexto preservado.
                 </p>
               </div>
-
               <button
                 type="button"
                 onClick={handleExport}
@@ -415,7 +362,6 @@ export function AgencyWorkspace({
               </button>
             </div>
           </section>
-
           <BrandLabPanel key={selectedClient.id} client={selectedClient} />
         </div>
       ) : null;
@@ -451,6 +397,9 @@ export function AgencyWorkspace({
     );
   }
 
+  // Active agent definition for tab content
+  const activeAgentDef = AGENT_DEFINITIONS.find((a) => a.key === activeAgentTab) || AGENT_DEFINITIONS[0];
+
   return (
     <div className="space-y-5" style={buildThemeStyle(selectedClient)}>
       <CommandBar
@@ -477,37 +426,37 @@ export function AgencyWorkspace({
         onStepClick={handleStepChange}
       />
 
+      {/* ─── Main content area ─── */}
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.9fr),360px]">
+
+        {/* LEFT: Agent tabs + content */}
         <div className="space-y-5">
+
+          {/* Status bar */}
           <div className="card rounded-[1.8rem] p-5">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-text-3)]">
-                  Resultados
+                  Resultados dos agentes
                 </div>
-                <h2 className="mt-2 font-heading text-2xl font-semibold text-[var(--color-text-1)]">
-                  Cards de agentes com leitura rapida
+                <h2 className="mt-1 font-heading text-xl font-semibold text-[var(--color-text-1)]">
+                  Selecione um agente para ler o resultado
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-2)]">
-                  Os agentes operacionais ficam juntos a esquerda; o Art Director ganha
-                  um painel proprio para nao se misturar com o resto da UI.
-                </p>
               </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex flex-wrap gap-3">
                 <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
                     Campanha aberta
                   </div>
-                  <div className="mt-2 text-sm text-[var(--color-text-1)]">
+                  <div className="mt-1 text-sm text-[var(--color-text-1)]">
                     {activeCampaign ? formatDateTime(activeCampaign.created_at) : "Nenhuma selecionada"}
                   </div>
                 </div>
                 <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
                     Status
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-sm text-[var(--color-text-1)]">
+                  <div className="mt-1 flex items-center gap-2 text-sm text-[var(--color-text-1)]">
                     {isRunning ? (
                       <>
                         <Clock3 className="h-4 w-4 text-[var(--color-warning)]" />
@@ -522,10 +471,10 @@ export function AgencyWorkspace({
                   </div>
                 </div>
                 <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-3)]">
                     Agentes prontos
                   </div>
-                  <div className="mt-2 text-sm text-[var(--color-text-1)]">
+                  <div className="mt-1 text-sm text-[var(--color-text-1)]">
                     {completedAgentsCount}/5 na campanha atual
                   </div>
                 </div>
@@ -551,28 +500,60 @@ export function AgencyWorkspace({
               </div>
             </div>
           ) : (
-            <div className="grid gap-5 md:grid-cols-2">
-              {RESULT_AGENT_KEYS.map((agentKey) => {
-                const agent = AGENT_DEFINITIONS.find((item) => item.key === agentKey);
+            <div className="card overflow-hidden rounded-[1.8rem]">
+              {/* ── Agent tabs ── */}
+              <div className="border-b border-[var(--color-border)] bg-[#faf9ff]">
+                <div className="flex gap-1 overflow-x-auto p-2">
+                  {RESULT_AGENT_KEYS.map((key) => {
+                    const agentDef = AGENT_DEFINITIONS.find((a) => a.key === key);
+                    if (!agentDef) return null;
+                    const hasContent = Boolean(activeCampaign.results[key]?.trim());
+                    const isActive = activeAgentTab === key;
 
-                if (!agent) {
-                  return null;
-                }
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setActiveAgentTab(key)}
+                        className={[
+                          "flex flex-shrink-0 items-center gap-2 rounded-[1rem] px-4 py-2.5 text-sm font-semibold transition",
+                          isActive
+                            ? "bg-white shadow-sm text-[var(--color-text-1)] border border-[var(--color-border)]"
+                            : "text-[var(--color-text-2)] hover:bg-white/60"
+                        ].join(" ")}
+                      >
+                        {agentDef.label}
+                        {hasContent && !isRunning ? (
+                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />
+                        ) : isRunning ? (
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-warning)]" />
+                        ) : (
+                          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-border)]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                return (
-                  <AgentResultCard
-                    key={agent.key}
-                    agent={agent}
-                    loading={isRunning}
-                    client={selectedClient}
-                    content={activeCampaign.results[agent.key]}
-                  />
-                );
-              })}
+              {/* ── Active tab content ── */}
+              <div className="p-5">
+                <AgentResultCard
+                  key={activeAgentTab}
+                  agent={activeAgentDef}
+                  loading={isRunning}
+                  client={selectedClient}
+                  content={activeCampaign.results[activeAgentTab]}
+                  onOpenEditor={() =>
+                    openEditorWithInstruction(activeCampaign?.results.artDirector)
+                  }
+                />
+              </div>
             </div>
           )}
         </div>
 
+        {/* RIGHT: Art Director + History sidebar */}
         <aside className="space-y-5 xl:sticky xl:top-28 xl:self-start">
           <ArtDirectorBriefPanel
             brief={artDirectorBrief}
@@ -581,7 +562,6 @@ export function AgencyWorkspace({
             onOpenEditor={() => openEditorWithInstruction(activeCampaign?.results.artDirector)}
             onOpenBrandLab={() => setActiveWorkflowStep("publish")}
           />
-
           <CampaignHistory
             campaigns={clientCampaigns}
             activeCampaignId={activeCampaign?.id || null}
@@ -594,4 +574,3 @@ export function AgencyWorkspace({
     </div>
   );
 }
-

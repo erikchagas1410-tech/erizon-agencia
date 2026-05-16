@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users } from "lucide-react";
+import { Archive, ImagePlus, LayoutDashboard, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,16 @@ const items = [
     href: "/clientes",
     label: "Clientes",
     icon: Users
+  },
+  {
+    href: "/creative-engine",
+    label: "Creative",
+    icon: ImagePlus
+  },
+  {
+    href: "/creative-library",
+    label: "Library",
+    icon: Archive
   }
 ];
 
@@ -28,7 +38,10 @@ export function PrimaryNav({
   const isBottom = orientation === "bottom";
 
   return (
-    <nav className={cn(isBottom ? "grid grid-cols-2 gap-1 px-2 py-2" : "space-y-1")}>
+    <nav
+      className={cn(isBottom ? "grid gap-1 px-2 py-2" : "space-y-1")}
+      style={isBottom ? { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` } : undefined}
+    >
       {items.map((item) => {
         const isActive =
           item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);

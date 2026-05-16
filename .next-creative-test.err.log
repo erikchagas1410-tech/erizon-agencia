@@ -1,0 +1,49 @@
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3010
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at C:\Users\isado\Documents\erizon-agencia\node_modules\next\dist\server\lib\start-server.js:280:(node:8044) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[creative-render] {"timestamp":"2026-05-16T12:34:40.670Z","stage":"generate","success":false,"format":"feed_portrait","durationMs":784,"briefingSummary":"Criar an�ncio para gestores de tr�fego que perdem tempo analisando campanhas manualmente e montando relat�rios para clientes no WhatsApp.","error":"Invalid URL"}
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (101kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+[creative-render] {"timestamp":"2026-05-16T12:35:32.571Z","stage":"generate","success":false,"format":"feed_portrait","durationMs":774,"briefingSummary":"Criar an�ncio para gestores de tr�fego que perdem tempo analisando campanhas manualmente e montando relat�rios para clientes no WhatsApp.","error":"Falha ao renderizar PNG: Invalid URL"}
+[creative-render] {"timestamp":"2026-05-16T12:37:38.650Z","stage":"generate","success":false,"format":"feed_portrait","durationMs":722,"briefingSummary":"Criar an�ncio para gestores de tr�fego que perdem tempo analisando campanhas manualmente e montando relat�rios para clientes no WhatsApp.","error":"Falha ao renderizar PNG: Invalid URL"}
+[creative-render] {"timestamp":"2026-05-16T12:39:30.971Z","stage":"generate","success":false,"format":"feed_portrait","durationMs":899,"briefingSummary":"Criar an�ncio para gestores de tr�fego que perdem tempo analisando campanhas manualmente e montando relat�rios para clientes no WhatsApp.","error":"Falha ao renderizar PNG: Invalid URL"}
+ ⨯ ./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+./node_modules/@resvg/resvg-js/js-binding.js
+./node_modules/@resvg/resvg-js/index.js
+./lib/creative/render-creative-png.tsx
+./lib/creative/engine.ts
+./app/api/creative-render/generate/route.ts
+ ⨯ ./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+./node_modules/@resvg/resvg-js/js-binding.js
+./node_modules/@resvg/resvg-js/index.js
+./lib/creative/render-creative-png.tsx
+./lib/creative/engine.ts
+./app/api/creative-render/generate/route.ts
+ ⨯ ./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+Module parse failed: Unexpected character '�' (1:2)
+You may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders
+(Source code omitted for this binary file)
+
+Import trace for requested module:
+./node_modules/@resvg/resvg-js-win32-x64-msvc/resvgjs.win32-x64-msvc.node
+./node_modules/@resvg/resvg-js/js-binding.js
+./node_modules/@resvg/resvg-js/index.js
+./lib/creative/render-creative-png.tsx
+./lib/creative/engine.ts
+./app/api/creative-render/generate/route.ts
