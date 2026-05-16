@@ -22,18 +22,25 @@ const FORMAT_CONTEXT: Record<ImageFormat, string> = {
  */
 const FORMAT_HEADING_ALIASES: Record<ImageFormat, string[]> = {
   feed: [
+    "prompt de background para feed",
+    "prompt background para feed",
     "prompt canva para feed",
     "prompt para feed",
     "feed prompt",
     "prompt feed"
   ],
   story: [
+    "prompt de background para story",
+    "prompt background para story",
     "prompt canva para story",
     "prompt para story",
     "story prompt",
     "prompt story"
   ],
   carousel_cover: [
+    "prompt de background para carousel",
+    "prompt background para carousel",
+    "prompt de background para carrossel",
     "prompt canva para carousel",
     "prompt para carousel",
     "carousel prompt",
