@@ -855,19 +855,21 @@ export function TemplateEditor({
     return (
       <div
         className={cn(
-          "fixed inset-y-0 z-40 w-[88vw] max-w-sm bg-[#080808] p-4 transition lg:hidden",
-          side === "left" ? "left-0 border-r border-white/10" : "right-0 border-l border-white/10",
+          "fixed inset-y-0 z-40 w-[88vw] max-w-sm bg-[var(--color-bg)] p-4 transition lg:hidden",
+          side === "left"
+            ? "left-0 border-r border-[var(--color-border)]"
+            : "right-0 border-l border-[var(--color-border)]",
           open ? "translate-x-0" : side === "left" ? "-translate-x-full" : "translate-x-full"
         )}
       >
         <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm font-semibold text-white">
+          <div className="text-sm font-semibold text-[var(--color-text-1)]">
             {side === "left" ? "Layers e galeria" : "Propriedades"}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-white/10 bg-white/6 p-2 text-white/70"
+            className="rounded-full border border-[var(--color-border)] bg-white p-2 text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1041,25 +1043,25 @@ export function TemplateEditor({
       )}
 
       {analysisModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-[1.75rem] border border-white/10 bg-[#0b0b0b] p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(26,26,46,0.38)] px-4">
+          <div className="card max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-[1.75rem] p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <div className="text-lg font-semibold text-white">Analise com IA</div>
-                <div className="mt-1 text-sm text-white/46">
+                <div className="text-lg font-semibold text-[var(--color-text-1)]">Analise com IA</div>
+                <div className="mt-1 text-sm text-[var(--color-text-2)]">
                   Critica de hierarquia, alinhamento e forca visual do template.
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setAnalysisModal(null)}
-                className="rounded-full border border-white/10 bg-white/6 p-2 text-white/70 transition hover:bg-white/10"
+                className="rounded-full border border-[var(--color-border)] bg-white p-2 text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="whitespace-pre-wrap text-sm text-white/78">
+            <div className="whitespace-pre-wrap text-sm text-[var(--color-text-2)]">
               {analysisModal}
             </div>
           </div>

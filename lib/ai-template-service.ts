@@ -1,8 +1,12 @@
 import "server-only";
 
-import { serverEnv } from "@/lib/env";
 import { inferBrandTheme } from "@/lib/brand-theme";
 import { EDITOR_FORMAT_DIMENSIONS } from "@/lib/canvas-templates";
+import {
+  getGroqClient,
+  GROQ_TEXT_MODEL,
+  readGroqText
+} from "@/lib/groq-client";
 
 import type {
   AITemplateSuggestion,
@@ -13,10 +17,6 @@ import type {
   ShapeLayer,
   TextLayer
 } from "@/lib/types";
-
-const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
-const ANTHROPIC_VERSION = "2023-06-01";
 
 const GENERATE_SYSTEM_PROMPT = [
   "Voce e um diretor de arte digital especializado em social media premium.",
@@ -82,11 +82,12 @@ export async function generateAITemplate(
     .filter(Boolean)
     .join("\n");
 
-  const content = await callAnthropic({
+  const content = await callGroq({
     system: GENERATE_SYSTEM_PROMPT,
     user: userPrompt,
     maxTokens: 2600,
-    temperature: 0.7
+    temperature: 0.7,
+    jsonMode: true
   });
 
   const parsed = parseJsonFromText(content);
@@ -98,7 +99,7 @@ export async function analyzeTemplate(
   layers: EditorLayer[],
   client: ClientProfile
 ): Promise<string> {
-  const content = await callAnthropic({
+  return callGroq({
     system:
       "Voce e um diretor de criacao e UX visual. Analise templates para social media e responda em markdown em portugues do Brasil.",
     user: [
@@ -119,8 +120,6 @@ export async function analyzeTemplate(
     maxTokens: 1400,
     temperature: 0.4
   });
-
-  return content;
 }
 
 export async function suggestTemplateTexts(
@@ -134,7 +133,7 @@ export async function suggestTemplateTexts(
     return {};
   }
 
-  const content = await callAnthropic({
+  const content = await callGroq({
     system: [
       "Voce e um copywriter premium para templates visuais.",
       "Retorne APENAS JSON valido em portugues do Brasil no formato objeto simples.",
@@ -165,7 +164,8 @@ export async function suggestTemplateTexts(
       .filter(Boolean)
       .join("\n"),
     maxTokens: 1200,
-    temperature: 0.65
+    temperature: 0.65,
+    jsonMode: true
   });
 
   const parsed = parseJsonFromText(content);
@@ -185,55 +185,39 @@ export async function suggestTemplateTexts(
   return next;
 }
 
-async function callAnthropic({
+async function callGroq({
   system,
   user,
   maxTokens,
-  temperature
+  temperature,
+  jsonMode = false
 }: {
   system: string;
   user: string;
   maxTokens: number;
   temperature: number;
+  jsonMode?: boolean;
 }) {
-  const response = await fetch(ANTHROPIC_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": serverEnv.anthropicApiKey,
-      "anthropic-version": ANTHROPIC_VERSION
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      system,
-      max_tokens: maxTokens,
-      temperature,
-      messages: [
-        {
-          role: "user",
-          content: user
-        }
-      ]
-    })
+  const groq = getGroqClient();
+  const completion = await groq.chat.completions.create({
+    model: GROQ_TEXT_MODEL,
+    messages: [
+      {
+        role: "system",
+        content: system
+      },
+      {
+        role: "user",
+        content: user
+      }
+    ],
+    temperature,
+    top_p: 1,
+    max_completion_tokens: maxTokens,
+    ...(jsonMode ? { response_format: { type: "json_object" as const } } : {})
   });
 
-  const payload = await response.json();
-
-  if (!response.ok) {
-    const errorMessage =
-      payload?.error?.message ||
-      payload?.message ||
-      "Falha ao consultar a IA de templates.";
-    throw new Error(errorMessage);
-  }
-
-  const blocks = Array.isArray(payload?.content) ? payload.content : [];
-  const text = blocks
-    .map((block: { text?: unknown }) =>
-      typeof block?.text === "string" ? block.text : ""
-    )
-    .join("\n")
-    .trim();
+  const text = readGroqText(completion.choices[0]?.message?.content);
 
   if (!text) {
     throw new Error("A IA nao retornou conteudo desta vez.");

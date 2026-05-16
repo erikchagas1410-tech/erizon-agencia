@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { DM_Sans, Syne } from "next/font/google";
+import { Inter, Syne } from "next/font/google";
 
 import { APP_NAME } from "@/lib/constants";
 
@@ -11,15 +11,15 @@ const syne = Syne({
   variable: "--font-syne"
 });
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-dm-sans"
+  variable: "--font-inter"
 });
 
 export const metadata: Metadata = {
-  title: `${APP_NAME} | Sistema Operacional da Sua Agência IA`,
+  title: `${APP_NAME} | Sistema Operacional da Sua Agencia IA`,
   description:
-    "Plataforma SaaS multiagente para operação criativa com Next.js, Supabase e Groq.",
+    "Plataforma SaaS multiagente para operacao criativa com Next.js, Supabase e Groq.",
   applicationName: APP_NAME
 };
 
@@ -29,9 +29,9 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR">
       <body
-        className={`${syne.variable} ${dmSans.variable} min-h-screen bg-[#050505] font-body text-white antialiased`}
+        className={`${syne.variable} ${inter.variable} min-h-screen bg-[var(--color-bg)] font-sans text-[var(--color-text-1)] antialiased`}
       >
         {children}
       </body>

@@ -171,18 +171,18 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
 
   return (
     <section className="panel overflow-hidden">
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
         <div>
           <p className="label">Brand Lab · {client.name}</p>
-          <h2 className="mt-0.5 font-heading text-lg font-semibold">
+          <h2 className="mt-0.5 font-heading text-lg font-semibold text-[var(--color-text-1)]">
             Chat estrategico
           </h2>
         </div>
-        <div className="text-xs text-white/30">JPG, PNG, WEBP, SVG ate 4 MB</div>
+        <div className="text-xs text-[var(--color-text-3)]">JPG, PNG, WEBP, SVG ate 4 MB</div>
       </div>
 
       <div className="grid xl:grid-cols-[220px,1fr]" style={{ minHeight: 520 }}>
-        <aside className="hidden border-r border-white/[0.05] p-4 xl:block">
+        <aside className="hidden border-r border-[var(--color-border)] bg-[#fcfbff] p-4 xl:block">
           <p className="label mb-3">Sugestoes</p>
           <div className="space-y-1.5">
             {SUGGESTIONS.map((suggestion) => (
@@ -190,7 +190,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                 key={suggestion}
                 type="button"
                 onClick={() => setDraft(suggestion)}
-                className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 text-left text-xs text-white/58 transition hover:border-white/10 hover:text-white/80"
+                className="w-full rounded-lg border border-[var(--color-border)] bg-white px-3 py-2.5 text-left text-xs text-[var(--color-text-2)] transition hover:bg-[#faf9ff] hover:text-[var(--color-text-1)]"
               >
                 {suggestion}
               </button>
@@ -200,15 +200,15 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
           <div className="divider my-4" />
 
           <p className="label mb-3">Contexto ativo</p>
-          <div className="space-y-2 text-xs text-white/50">
+          <div className="space-y-2 text-xs text-[var(--color-text-2)]">
             <div>
-              <span className="text-white/30">Tom:</span> {client.voice_tone}
+              <span className="text-[var(--color-text-3)]">Tom:</span> {client.voice_tone}
             </div>
             <div>
-              <span className="text-white/30">Personalidade:</span> {client.personality}
+              <span className="text-[var(--color-text-3)]">Personalidade:</span> {client.personality}
             </div>
             <div>
-              <span className="text-white/30">Estetica:</span> {client.visual_aesthetic}
+              <span className="text-[var(--color-text-3)]">Estetica:</span> {client.visual_aesthetic}
             </div>
           </div>
         </aside>
@@ -217,8 +217,8 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
           <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4" style={{ maxHeight: 480 }}>
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 py-12 text-center">
-                <Sparkles className="h-6 w-6 text-white/16" />
-                <p className="text-sm text-white/32">
+                <Sparkles className="h-6 w-6 text-[var(--color-primary)]/30" />
+                <p className="text-sm text-[var(--color-text-3)]">
                   Envie uma mensagem ou imagem para comecar.
                 </p>
               </div>
@@ -229,14 +229,14 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                   className={cn(
                     "rounded-xl border px-4 py-3",
                     message.role === "assistant"
-                      ? "border-white/[0.06] bg-white/[0.03]"
-                      : "border-violet-500/20 bg-violet-500/[0.07]"
+                      ? "border-[var(--color-border)] bg-white"
+                      : "border-[#d9d3ff] bg-[var(--color-primary-light)]"
                   )}
                 >
                   <p className="label mb-2 text-[10px]">
                     {message.role === "assistant" ? "Brand Lab" : "Voce"}
                   </p>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-white/80">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-1)]">
                     {message.content}
                   </p>
                   {message.attachments.length > 0 && (
@@ -246,7 +246,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                           key={`${message.id}-${attachment.name}`}
                           src={attachment.dataUrl}
                           alt={attachment.name}
-                          className="h-16 w-16 rounded-xl border border-white/10 object-cover"
+                          className="h-16 w-16 rounded-xl border border-[var(--color-border)] object-cover"
                         />
                       ))}
                     </div>
@@ -256,19 +256,19 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
             )}
 
             {isSending && (
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+              <div className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-3">
                 <p className="label mb-2 text-[10px]">Brand Lab</p>
                 <div className="space-y-2">
-                  <div className="h-2.5 w-32 animate-pulse rounded-full bg-white/10" />
-                  <div className="h-2.5 w-full animate-pulse rounded-full bg-white/8" />
-                  <div className="h-2.5 w-4/5 animate-pulse rounded-full bg-white/8" />
+                  <div className="h-2.5 w-32 animate-pulse rounded-full bg-[var(--color-primary-light)]" />
+                  <div className="h-2.5 w-full animate-pulse rounded-full bg-[#efecff]" />
+                  <div className="h-2.5 w-4/5 animate-pulse rounded-full bg-[#efecff]" />
                 </div>
               </div>
             )}
             <div ref={bottomRef} />
           </div>
 
-          <div className="space-y-3 border-t border-white/[0.06] p-4">
+          <div className="space-y-3 border-t border-[var(--color-border)] p-4">
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {attachments.map((attachment, index) => (
@@ -276,7 +276,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                     <img
                       src={attachment.dataUrl}
                       alt={attachment.name}
-                      className="h-14 w-14 rounded-xl border border-white/10 object-cover"
+                      className="h-14 w-14 rounded-xl border border-[var(--color-border)] object-cover"
                     />
                     <button
                       type="button"
@@ -285,7 +285,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                           current.filter((_, currentIndex) => currentIndex !== index)
                         )
                       }
-                      className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/10 bg-black/80 text-white/70"
+                      className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full border border-[var(--color-border)] bg-white text-[var(--color-text-2)]"
                     >
                       <X className="h-2.5 w-2.5" />
                     </button>
@@ -294,7 +294,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
               </div>
             )}
 
-            {feedback && <p className="text-xs text-white/50">{feedback}</p>}
+            {feedback && <p className="text-xs text-[var(--color-text-2)]">{feedback}</p>}
 
             <div className="flex gap-2">
               <input
@@ -320,7 +320,7 @@ export function BrandLabPanel({ client }: { client: ClientProfile }) {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 rows={2}
-                placeholder="Mensagem para o Brand Lab…"
+                placeholder="Mensagem para o Brand Lab..."
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();

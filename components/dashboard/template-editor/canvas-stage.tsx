@@ -569,7 +569,7 @@ export function CanvasStage({
       ref={wrapperRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="relative flex h-full min-h-[520px] items-center justify-center overflow-auto rounded-[1.75rem] border border-white/10 bg-[#090909] p-4 outline-none"
+      className="relative flex h-full min-h-[520px] items-center justify-center overflow-auto rounded-[1.75rem] border border-[var(--color-border)] bg-[#f3f0ff] p-4 outline-none"
     >
       <div
         className="relative shrink-0"
@@ -582,7 +582,7 @@ export function CanvasStage({
       >
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full rounded-[1.25rem] bg-black shadow-[0_30px_90px_rgba(0,0,0,0.35)]"
+          className="absolute inset-0 h-full w-full rounded-[1.25rem] bg-white shadow-[0_18px_48px_rgba(108,99,255,0.14)]"
           style={{ width: displayWidth, height: displayHeight }}
         />
 
@@ -594,7 +594,7 @@ export function CanvasStage({
                   .map((point) => `${point.x * scale},${point.y * scale}`)
                   .join(" ")}
                 fill="transparent"
-                stroke="rgba(255,255,255,0.7)"
+                stroke="rgba(108,99,255,0.8)"
                 strokeWidth="1.5"
                 strokeDasharray="6 6"
               />
@@ -607,8 +607,8 @@ export function CanvasStage({
                   cx={point.x * scale}
                   cy={point.y * scale}
                   r={handle === "rotate" ? 8 : 6}
-                  fill={handle === "rotate" ? "#050505" : "#ffffff"}
-                  stroke="#ffffff"
+                  fill={handle === "rotate" ? "#6c63ff" : "#ffffff"}
+                  stroke="#6c63ff"
                   strokeWidth="1.5"
                   className="pointer-events-auto"
                   data-handle={handle}
@@ -631,7 +631,7 @@ export function CanvasStage({
                 commitInlineText();
               }
             }}
-            className="absolute resize-none rounded-[1rem] border border-white/20 bg-black/75 px-3 py-3 text-sm text-white outline-none backdrop-blur"
+            className="absolute resize-none rounded-[1rem] border border-[var(--color-primary)] bg-white px-3 py-3 text-sm text-[var(--color-text-1)] outline-none shadow-[0_10px_30px_rgba(108,99,255,0.14)]"
             style={{
               left: editingLayer.x * scale,
               top: editingLayer.y * scale,

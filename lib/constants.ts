@@ -6,47 +6,88 @@ export const AGENT_DEFINITIONS: AgentDefinition[] = [
   {
     key: "strategist",
     label: "Strategist",
-    badge: "Estratégia",
-    accent: "#38BDF8",
-    description: "Transforma o pedido em uma linha editorial executável."
+    badge: "Estrategia",
+    accent: "#8B5CF6",
+    description: "Transforma o pedido em uma linha editorial clara e executavel."
   },
   {
     key: "copywriter",
     label: "Copywriter",
     badge: "Copy",
-    accent: "#F472B6",
-    description: "Escreve legendas, CTA e hashtags no tom da marca."
+    accent: "#22C55E",
+    description: "Escreve legendas, CTA e ganchos no tom real da marca."
   },
   {
     key: "artDirector",
     label: "Art Director",
     badge: "Visual",
-    accent: "#FACC15",
-    description: "Cria conceito visual, direção estética e prompts para Canva."
+    accent: "#F59E0B",
+    description: "Consolida conceito visual, composicao e direcao estetica."
   },
   {
     key: "trafficManager",
     label: "Traffic Manager",
-    badge: "Mídia Paga",
-    accent: "#4ADE80",
-    description: "Traduz a peça para campanha e segmentação quando fizer sentido."
+    badge: "Midia Paga",
+    accent: "#38BDF8",
+    description: "Traduz a peca para distribuicao, segmentacao e acao."
   },
   {
     key: "analyst",
     label: "Analyst",
-    badge: "Métricas",
-    accent: "#A78BFA",
-    description: "Define métricas, benchmarks e testes para melhoria contínua."
+    badge: "Metricas",
+    accent: "#0EA5E9",
+    description: "Define metricas, benchmarks e testes para melhorar o desempenho."
   }
 ];
+
+export const AGENT_COLORS: Record<
+  AgentKey,
+  {
+    accent: string;
+    soft: string;
+    border: string;
+    icon: "compass" | "pen" | "palette" | "megaphone" | "chart";
+  }
+> = {
+  strategist: {
+    accent: "#8B5CF6",
+    soft: "rgba(139, 92, 246, 0.14)",
+    border: "rgba(139, 92, 246, 0.26)",
+    icon: "compass"
+  },
+  copywriter: {
+    accent: "#22C55E",
+    soft: "rgba(34, 197, 94, 0.14)",
+    border: "rgba(34, 197, 94, 0.26)",
+    icon: "pen"
+  },
+  artDirector: {
+    accent: "#F59E0B",
+    soft: "rgba(245, 158, 11, 0.14)",
+    border: "rgba(245, 158, 11, 0.26)",
+    icon: "palette"
+  },
+  trafficManager: {
+    accent: "#38BDF8",
+    soft: "rgba(56, 189, 248, 0.14)",
+    border: "rgba(56, 189, 248, 0.26)",
+    icon: "megaphone"
+  },
+  analyst: {
+    accent: "#0EA5E9",
+    soft: "rgba(14, 165, 233, 0.14)",
+    border: "rgba(14, 165, 233, 0.26)",
+    icon: "chart"
+  }
+};
 
 export const AGENT_KEYS = AGENT_DEFINITIONS.map((agent) => agent.key);
 
 export const REQUEST_SUGGESTIONS = [
   "Crie um carrossel de dicas para topo de funil",
-  "Produza um story de lançamento com CTA forte",
+  "Produza um story de lancamento com CTA forte",
   "Monte um post aspiracional para fortalecer autoridade",
-  "Escreva um anúncio para Meta Ads com foco em conversão",
+  "Escreva um anuncio para Meta Ads com foco em conversao",
   "Planeje um reel curto com gancho e promessa clara"
 ];
 

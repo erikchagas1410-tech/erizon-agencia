@@ -1,6 +1,6 @@
 # AI Agency OS
 
-SaaS multiagente para operação criativa. O usuário cadastra a identidade completa de cada cliente uma única vez e depois só precisa escrever pedidos simples como `crie um carrossel de dicas` para disparar uma squad com 5 especialistas de IA: estratégia, copy, direção de arte, tráfego e análise.
+SaaS multiagente para operacao criativa. O usuario cadastra a identidade completa de cada cliente uma unica vez e depois so precisa escrever pedidos simples como `crie um carrossel de dicas` para disparar uma squad com 5 especialistas de IA: estrategia, copy, direcao de arte, trafego e analise.
 
 ## Stack
 
@@ -8,19 +8,19 @@ SaaS multiagente para operação criativa. O usuário cadastra a identidade comp
 - TypeScript
 - Tailwind CSS
 - Supabase Auth + Postgres + RLS
-- Groq API com modelo `llama-3.3-70b-versatile`
+- Groq API para fluxos de texto e visao
 - Deploy pronto para Vercel
 
-## O que está pronto
+## O que esta pronto
 
 - Login com Google OAuth e magic link via Supabase
-- Middleware protegendo páginas e APIs
-- Gestão completa de clientes com CRUD
-- Fluxo principal de produção com 5 agentes executados em paralelo
-- Histórico de campanhas por cliente
-- Exportação de resultados em `.md`
-- Botão de cópia por agente
-- Busca rápida no Canva a partir da resposta do Art Director
+- Middleware protegendo paginas e APIs
+- Gestao completa de clientes com CRUD
+- Fluxo principal de producao com 5 agentes executados em paralelo
+- Historico de campanhas por cliente
+- Exportacao de resultados em `.md`
+- Botao de copia por agente
+- Busca rapida no Canva a partir da resposta do Art Director
 - Interface responsiva em PT-BR, dark theme e cards em glassmorphism
 
 ## Estrutura
@@ -33,8 +33,13 @@ app/
     layout.tsx
   api/
     agency/route.ts
+    branding/route.ts
+    ai-template/route.ts
+    ai-template/analyze/route.ts
+    ai-template/suggest-texts/route.ts
     clients/route.ts
     clients/[id]/route.ts
+    clients/analyze-brand-image/route.ts
   auth/
     callback/route.ts
     signout/route.ts
@@ -45,7 +50,10 @@ components/
   dashboard/
   layout/
 lib/
+  ai-template-service.ts
   brand-theme.ts
+  branding-prompts.ts
+  groq-client.ts
   groq.ts
   language.ts
   markdown.ts
@@ -56,18 +64,17 @@ supabase/
   migrations/001_init.sql
 ```
 
-## 1. Instalação
+## 1. Instalacao
 
 ```bash
 npm install
 ```
 
-## 2. Variáveis de ambiente
+## 2. Variaveis de ambiente
 
 Copie `.env.local.example` para `.env.local` e preencha:
 
 ```env
-ANTHROPIC_API_KEY=
 GROQ_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -76,14 +83,13 @@ NEXT_PUBLIC_APP_NAME=AI Agency OS
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### Observações
+### Observacoes
 
-- `ANTHROPIC_API_KEY` fica exclusivamente no servidor e alimenta o editor visual com IA.
-- `GROQ_API_KEY` fica exclusivamente no servidor.
-- `SUPABASE_SERVICE_ROLE_KEY` também é server-side only.
-- `NEXT_PUBLIC_APP_URL` deve refletir a URL atual do app local ou de produção.
+- `GROQ_API_KEY` fica exclusivamente no servidor e alimenta os fluxos de texto e visao.
+- `SUPABASE_SERVICE_ROLE_KEY` tambem e server-side only.
+- `NEXT_PUBLIC_APP_URL` deve refletir a URL atual do app local ou de producao.
 
-## 3. Configuração do Supabase
+## 3. Configuracao do Supabase
 
 ### Banco e RLS
 
@@ -104,7 +110,7 @@ No Supabase, habilite:
 - Google OAuth
 - Magic Link
 
-Configure também:
+Configure tambem:
 
 - `Site URL`: `http://localhost:3000` no desenvolvimento
 - Redirect URLs:
@@ -121,7 +127,7 @@ Use uma URL no formato:
 {{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email
 ```
 
-Se quiser manter redirecionamentos adicionais, adapte esse template conforme a sua estratégia de `next`.
+Se quiser manter redirecionamentos adicionais, adapte esse template conforme a sua estrategia de `next`.
 
 ## 4. Desenvolvimento
 
@@ -137,21 +143,21 @@ http://localhost:3000
 
 ## 5. Deploy na Vercel
 
-1. Suba o projeto para um repositório Git.
-2. Importe o repositório na Vercel.
-3. Configure as mesmas variáveis do `.env.local`.
-4. Ajuste `NEXT_PUBLIC_APP_URL` para a URL real da aplicação.
+1. Suba o projeto para um repositorio Git.
+2. Importe o repositorio na Vercel.
+3. Configure as mesmas variaveis do `.env.local`.
+4. Ajuste `NEXT_PUBLIC_APP_URL` para a URL real da aplicacao.
 5. No Supabase Auth, adicione a URL final da Vercel em `Site URL` e `Redirect URLs`.
-6. Faça o deploy.
+6. Faca o deploy.
 
 ## Fluxo de uso
 
 1. Cadastre um cliente completo em `/clientes`.
-2. Vá para `/`.
+2. Va para `/`.
 3. Selecione o cliente.
 4. Digite um pedido curto.
 5. Clique em `Rodar time de 5 agentes`.
-6. Consulte os cards gerados, copie, exporte ou reabra campanhas do histórico.
+6. Consulte os cards gerados, copie, exporte ou reabra campanhas do historico.
 
 ## Como os agentes funcionam
 
@@ -164,14 +170,14 @@ O endpoint `app/api/agency/route.ts`:
 5. Salva o resultado em `campaigns`
 6. Retorna a campanha pronta para a UI
 
-## Observações de produção
+## Observacoes de producao
 
-- O Groq é chamado apenas no servidor.
-- O acesso a `clients` e `campaigns` está protegido por RLS.
-- As campanhas são removidas automaticamente quando um cliente é excluído, via `ON DELETE CASCADE`.
-- O tema visual da interface muda de forma sutil a partir da estética do cliente selecionado.
+- O Groq e chamado apenas no servidor.
+- O acesso a `clients` e `campaigns` esta protegido por RLS.
+- As campanhas sao removidas automaticamente quando um cliente e excluido, via `ON DELETE CASCADE`.
+- O tema visual da interface muda de forma sutil a partir da estetica do cliente selecionado.
 
-## Scripts úteis
+## Scripts uteis
 
 ```bash
 npm run dev

@@ -28,7 +28,7 @@ export function PrimaryNav({
   const isBottom = orientation === "bottom";
 
   return (
-    <nav className={cn(isBottom ? "grid grid-cols-2 gap-1" : "space-y-1")}>
+    <nav className={cn(isBottom ? "grid grid-cols-2 gap-1 px-2 py-2" : "space-y-1")}>
       {items.map((item) => {
         const isActive =
           item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
@@ -41,17 +41,21 @@ export function PrimaryNav({
             aria-current={isActive ? "page" : undefined}
             className={cn(
               isBottom
-                ? "relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center font-sans text-[11px] font-medium transition"
-                : "relative flex items-center gap-3 rounded-md px-3 py-2 font-sans text-[13px] font-medium transition",
+                ? "relative flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-center text-[11px] font-medium transition duration-150"
+                : "relative flex items-center gap-3 rounded-[12px] px-3 py-2 text-[13px] font-medium transition duration-150",
               isActive
-                ? "bg-[rgba(124,58,237,0.10)] text-white"
-                : "text-white/50 hover:bg-white/[0.04] hover:text-white/78"
+                ? isBottom
+                  ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                  : "bg-[rgba(255,255,255,0.1)] text-white"
+                : isBottom
+                  ? "text-[var(--color-text-2)] hover:bg-[#faf9ff] hover:text-[var(--color-primary)]"
+                  : "text-[rgba(255,255,255,0.72)] hover:bg-[rgba(255,255,255,0.08)] hover:text-white"
             )}
           >
             {!isBottom ? (
               <span
                 className={cn(
-                  "absolute bottom-1.5 left-0 top-1.5 w-0.5 rounded-full bg-gradient-to-b from-[var(--brand-primary)] to-[var(--brand-secondary)] transition-opacity",
+                  "absolute bottom-1.5 left-0 top-1.5 w-[3px] rounded-full bg-[var(--color-primary)] transition-opacity duration-150",
                   isActive ? "opacity-100" : "opacity-0"
                 )}
               />
@@ -60,7 +64,13 @@ export function PrimaryNav({
             <Icon
               className={cn(
                 isBottom ? "h-5 w-5" : "h-5 w-5 shrink-0",
-                isActive ? "text-white" : "text-white/40"
+                isActive
+                  ? isBottom
+                    ? "text-[var(--color-primary)]"
+                    : "text-white"
+                  : isBottom
+                    ? "text-[var(--color-text-3)]"
+                    : "text-[rgba(255,255,255,0.56)]"
               )}
             />
 

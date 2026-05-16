@@ -5,15 +5,14 @@ import {
   PenLine,
   Save,
   SearchCheck,
-  Sparkles,
-  SlidersHorizontal,
   SidebarClose,
-  SidebarOpen
+  SidebarOpen,
+  SlidersHorizontal,
+  Sparkles
 } from "lucide-react";
 
 import { EDITOR_FORMAT_DIMENSIONS } from "@/lib/canvas-templates";
 import type { CanvasTemplate } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const ZOOM_OPTIONS = [
   { label: "50%", value: "0.5" },
@@ -54,14 +53,14 @@ export function Toolbar({
   onOpenPropertiesDrawer: () => void;
 }) {
   return (
-    <div className="rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-4">
+    <div className="card rounded-[1.6rem] p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
           <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
               onClick={onOpenLayersDrawer}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs font-semibold text-white/74 transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             >
               <SidebarOpen className="h-3.5 w-3.5" />
               Layers
@@ -69,7 +68,7 @@ export function Toolbar({
             <button
               type="button"
               onClick={onOpenPropertiesDrawer}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs font-semibold text-white/74 transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             >
               <SidebarClose className="h-3.5 w-3.5" />
               Propriedades
@@ -77,9 +76,7 @@ export function Toolbar({
           </div>
 
           <label className="block space-y-2">
-            <span className="text-[11px] uppercase tracking-[0.16em] text-white/40">
-              Formato
-            </span>
+            <span className="label">Formato</span>
             <select
               value={templateFormat}
               onChange={(event) =>
@@ -96,9 +93,7 @@ export function Toolbar({
           </label>
 
           <label className="block space-y-2">
-            <span className="text-[11px] uppercase tracking-[0.16em] text-white/40">
-              Zoom
-            </span>
+            <span className="label">Zoom</span>
             <select
               value={zoom === "fit" ? "fit" : String(zoom)}
               onChange={(event) =>
@@ -117,11 +112,9 @@ export function Toolbar({
 
         <div className="min-w-0 flex-1 px-0 xl:px-6">
           <label className="block space-y-2">
-            <span className="text-[11px] uppercase tracking-[0.16em] text-white/40">
-              Nome do template
-            </span>
+            <span className="label">Nome do template</span>
             <div className="relative">
-              <PenLine className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/34" />
+              <PenLine className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-3)]" />
               <input
                 value={templateName}
                 onChange={(event) => onTemplateNameChange(event.target.value)}
@@ -137,9 +130,7 @@ export function Toolbar({
             type="button"
             onClick={onSave}
             disabled={isSaving}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-            )}
+            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
             {isSaving ? "Salvando..." : "Salvar template"}
@@ -148,7 +139,7 @@ export function Toolbar({
           <button
             type="button"
             onClick={onDownload}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
           >
             <Download className="h-4 w-4" />
             Baixar PNG
@@ -157,7 +148,7 @@ export function Toolbar({
           <button
             type="button"
             onClick={onAnalyze}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
           >
             <SearchCheck className="h-4 w-4" />
             Analisar com IA
@@ -166,7 +157,7 @@ export function Toolbar({
           <button
             type="button"
             onClick={onOpenAssistant}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+            className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8]"
           >
             {isGenerating ? (
               <SlidersHorizontal className="h-4 w-4 animate-pulse" />

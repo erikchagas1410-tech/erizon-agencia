@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -50,7 +50,7 @@ function Field({
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-text-3)]">
         {label}
       </span>
       {children}
@@ -95,7 +95,7 @@ export function PropertiesPanel({
 }) {
   if (!layer) {
     return (
-      <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-white/[0.03] px-5 py-10 text-center text-sm text-white/48">
+      <div className="rounded-[1.5rem] border border-dashed border-[var(--color-border)] bg-[#fbfaff] px-5 py-10 text-center text-sm text-[var(--color-text-2)]">
         Selecione uma layer para editar propriedades.
       </div>
     );
@@ -107,10 +107,10 @@ export function PropertiesPanel({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+      <section className="card rounded-[1.5rem] p-4">
         <div className="mb-4">
-          <div className="text-sm font-semibold text-white">Propriedades</div>
-          <div className="mt-1 text-xs text-white/44">
+          <div className="text-sm font-semibold text-[var(--color-text-1)]">Propriedades</div>
+          <div className="mt-1 text-xs text-[var(--color-text-2)]">
             Ajuste tamanho, posicao, opacidade e comportamento da layer.
           </div>
         </div>
@@ -143,7 +143,7 @@ export function PropertiesPanel({
             />
           </Field>
           <Field label="Rotacao">
-            <div className="rounded-[1rem] border border-white/10 bg-white/5 px-3 py-3">
+            <div className="rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-3 py-3">
               <input
                 type="range"
                 min="0"
@@ -153,13 +153,13 @@ export function PropertiesPanel({
                 onChange={(event) =>
                   onPatchLayer({ rotation: Number(event.target.value) }, true)
                 }
-                className="w-full accent-white"
+                className="w-full accent-[var(--color-primary)]"
               />
-              <div className="mt-2 text-xs text-white/54">{Math.round(layer.rotation)}°</div>
+              <div className="mt-2 text-xs text-[var(--color-text-2)]">{Math.round(layer.rotation)}Â°</div>
             </div>
           </Field>
           <Field label="Opacidade">
-            <div className="rounded-[1rem] border border-white/10 bg-white/5 px-3 py-3">
+            <div className="rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-3 py-3">
               <input
                 type="range"
                 min="0"
@@ -169,9 +169,9 @@ export function PropertiesPanel({
                 onChange={(event) =>
                   onPatchLayer({ opacity: Number(event.target.value) / 100 }, true)
                 }
-                className="w-full accent-white"
+                className="w-full accent-[var(--color-primary)]"
               />
-              <div className="mt-2 text-xs text-white/54">
+              <div className="mt-2 text-xs text-[var(--color-text-2)]">
                 {Math.round(layer.opacity * 100)}%
               </div>
             </div>
@@ -179,26 +179,26 @@ export function PropertiesPanel({
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74">
+          <label className="flex items-center gap-3 rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
             <input
               type="checkbox"
               checked={layer.visible}
               onChange={(event) =>
                 onPatchLayer({ visible: event.target.checked }, true)
               }
-              className="h-4 w-4 rounded border-white/20 bg-transparent"
+              className="h-4 w-4 rounded border-[var(--color-border)] bg-transparent"
             />
             Visivel
           </label>
 
-          <label className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74">
+          <label className="flex items-center gap-3 rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
             <input
               type="checkbox"
               checked={layer.locked}
               onChange={(event) =>
                 onPatchLayer({ locked: event.target.checked }, true)
               }
-              className="h-4 w-4 rounded border-white/20 bg-transparent"
+              className="h-4 w-4 rounded border-[var(--color-border)] bg-transparent"
             />
             Bloqueada
           </label>
@@ -218,11 +218,11 @@ export function PropertiesPanel({
       ) : null}
 
       {layer.type === "image" ? (
-        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-          <div className="mb-4 text-sm font-semibold text-white">Imagem</div>
+        <section className="card rounded-[1.5rem] p-4">
+          <div className="mb-4 text-sm font-semibold text-[var(--color-text-1)]">Imagem</div>
           <div className="space-y-4">
             <Field label="Arquivo">
-              <label className="inline-flex cursor-pointer items-center rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs font-semibold text-white/72 transition hover:bg-white/10">
+              <label className="inline-flex cursor-pointer items-center rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]">
                 Trocar imagem
                 <input
                   type="file"
@@ -274,14 +274,14 @@ export function PropertiesPanel({
       ) : null}
 
       {layer.type === "logo" ? (
-        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-          <div className="text-sm font-semibold text-white">Logo da marca</div>
-          <p className="mt-2 text-sm text-white/58">
+        <section className="card rounded-[1.5rem] p-4">
+          <div className="text-sm font-semibold text-[var(--color-text-1)]">Logo da marca</div>
+          <p className="mt-2 text-sm text-[var(--color-text-2)]">
             Esta layer usa automaticamente o logo cadastrado no perfil do cliente.
           </p>
           <Link
             href="/clientes"
-            className="mt-4 inline-flex rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs font-semibold text-white/74 transition hover:bg-white/10"
+            className="mt-4 inline-flex rounded-full border border-[var(--color-border)] bg-white px-4 py-2 text-xs font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
           >
             Editar logo no perfil do cliente
           </Link>
@@ -301,8 +301,8 @@ function BackgroundControls({
   const gradientEnabled = Boolean(layer.gradient);
 
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-      <div className="mb-4 text-sm font-semibold text-white">Background</div>
+    <section className="card rounded-[1.5rem] p-4">
+      <div className="mb-4 text-sm font-semibold text-[var(--color-text-1)]">Background</div>
 
       <div className="space-y-4">
         <Field label="Cor base">
@@ -345,7 +345,7 @@ function BackgroundControls({
           </div>
         </Field>
 
-        <label className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74">
+        <label className="flex items-center gap-3 rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
           <input
             type="checkbox"
             checked={gradientEnabled}
@@ -364,7 +364,7 @@ function BackgroundControls({
                 true
               )
             }
-            className="h-4 w-4 rounded border-white/20 bg-transparent"
+            className="h-4 w-4 rounded border-[var(--color-border)] bg-transparent"
           />
           Gradiente
         </label>
@@ -444,8 +444,8 @@ function ShapeControls({
   onReplaceLayer: (nextLayer: EditorLayer, commit?: boolean) => void;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-      <div className="mb-4 text-sm font-semibold text-white">Forma</div>
+    <section className="card rounded-[1.5rem] p-4">
+      <div className="mb-4 text-sm font-semibold text-[var(--color-text-1)]">Forma</div>
 
       <div className="space-y-4">
         <Field label="Tipo">
@@ -505,7 +505,7 @@ function ShapeControls({
 
         {layer.shape === "rect" ? (
           <Field label="Border Radius">
-            <div className="rounded-[1rem] border border-white/10 bg-white/5 px-3 py-3">
+            <div className="rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-3 py-3">
               <input
                 type="range"
                 min="0"
@@ -521,9 +521,9 @@ function ShapeControls({
                     true
                   )
                 }
-                className="w-full accent-white"
+                className="w-full accent-[var(--color-primary)]"
               />
-              <div className="mt-2 text-xs text-white/54">
+              <div className="mt-2 text-xs text-[var(--color-text-2)]">
                 {Math.round(layer.borderRadius)} px
               </div>
             </div>
@@ -588,8 +588,8 @@ function TextControls({
   onReplaceLayer: (nextLayer: EditorLayer, commit?: boolean) => void;
 }) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-      <div className="mb-4 text-sm font-semibold text-white">Texto</div>
+    <section className="card rounded-[1.5rem] p-4">
+      <div className="mb-4 text-sm font-semibold text-[var(--color-text-1)]">Texto</div>
 
       <div className="space-y-4">
         <Field label="Conteudo">
@@ -728,8 +728,8 @@ function TextControls({
                   }
                   className={`rounded-full border px-3 py-2 text-xs font-semibold transition ${
                     layer.textAlign === align
-                      ? "border-white/22 bg-white text-black"
-                      : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                      : "border-[var(--color-border)] bg-white text-[var(--color-text-2)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                   }`}
                 >
                   {align}
@@ -738,7 +738,7 @@ function TextControls({
             </div>
           </Field>
 
-          <label className="flex items-center gap-3 rounded-[1rem] border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/74">
+          <label className="flex items-center gap-3 rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
             <input
               type="checkbox"
               checked={layer.uppercase}
@@ -751,7 +751,7 @@ function TextControls({
                   true
                 )
               }
-              className="h-4 w-4 rounded border-white/20 bg-transparent"
+              className="h-4 w-4 rounded border-[var(--color-border)] bg-transparent"
             />
             Uppercase
           </label>
@@ -795,3 +795,4 @@ function TextControls({
     </section>
   );
 }
+

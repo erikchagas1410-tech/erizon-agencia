@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { History } from "lucide-react";
 
@@ -15,14 +15,16 @@ export function CampaignHistory({
   onSelect: (campaign: CampaignRecord) => void;
 }) {
   return (
-    <section className="glass-panel rounded-[1.75rem] p-5">
+    <section className="card rounded-[1.75rem] p-5">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/6">
-          <History className="h-4 w-4 text-white/72" />
+        <div className="icon-box icon-box-violet h-10 w-10">
+          <History className="h-4 w-4" />
         </div>
         <div>
-          <h2 className="font-heading text-xl font-semibold">Historico por cliente</h2>
-          <p className="text-sm text-white/56">
+          <h2 className="font-heading text-xl font-semibold text-[var(--color-text-1)]">
+            Historico por cliente
+          </h2>
+          <p className="text-sm text-[var(--color-text-2)]">
             Reabra campanhas anteriores sem alongar a pagina toda.
           </p>
         </div>
@@ -30,7 +32,7 @@ export function CampaignHistory({
 
       <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
         {campaigns.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/10 bg-white/3 px-4 py-8 text-center text-sm text-white/50">
+          <div className="rounded-3xl border border-dashed border-[var(--color-border)] bg-[#fbfaff] px-4 py-8 text-center text-sm text-[var(--color-text-2)]">
             Ainda nao existem campanhas para este cliente.
           </div>
         ) : null}
@@ -46,21 +48,19 @@ export function CampaignHistory({
               className={cn(
                 "w-full rounded-3xl border px-4 py-4 text-left transition",
                 active
-                  ? "border-white/18 bg-white/10"
-                  : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]"
+                  ? "border-[#c9c2ff] bg-[var(--color-primary-light)]"
+                  : "border-[var(--color-border)] bg-white hover:bg-[#faf9ff]"
               )}
             >
               <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="text-xs font-medium uppercase tracking-[0.2em] text-white/42">
+                <span className="text-xs font-medium uppercase tracking-[0.2em] text-[var(--color-text-3)]">
                   {formatDateTime(campaign.created_at)}
                 </span>
-                {active ? (
-                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-black">
-                    Aberta
-                  </span>
-                ) : null}
+                {active ? <span className="badge-info">Aberta</span> : null}
               </div>
-              <div className="line-clamp-2 text-sm text-white/82">{campaign.request}</div>
+              <div className="line-clamp-2 text-sm text-[var(--color-text-1)]">
+                {campaign.request}
+              </div>
             </button>
           );
         })}
@@ -68,3 +68,4 @@ export function CampaignHistory({
     </section>
   );
 }
+

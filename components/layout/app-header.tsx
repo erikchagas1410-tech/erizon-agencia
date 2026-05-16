@@ -30,7 +30,7 @@ function Avatar({
 
   return (
     <div
-      className={`flex items-center justify-center bg-white/8 text-[11px] font-semibold text-white ${rounded}`}
+      className={`flex items-center justify-center bg-[rgba(255,255,255,0.12)] text-[11px] font-semibold text-white ${rounded}`}
       style={{ width: size, height: size }}
     >
       {getInitials(user.name)}
@@ -41,21 +41,19 @@ function Avatar({
 export function AppHeader({ user }: { user: AppUser }) {
   return (
     <>
-      <aside className="sidebar-shell hidden h-screen flex-col pl-1 lg:sticky lg:top-0 lg:flex">
+      <aside className="sidebar-shell hidden h-screen w-[200px] flex-col lg:sticky lg:top-0 lg:flex">
         <div className="flex h-full flex-col px-4 py-6">
           <Link
             href="/"
-            className="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:bg-white/[0.03]"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition duration-150 hover:bg-[rgba(255,255,255,0.08)]"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-secondary)] text-black shadow-[0_10px_30px_rgba(20,184,166,0.18)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-[0_10px_30px_rgba(108,99,255,0.24)]">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
 
             <div className="min-w-0">
-              <div className="text-[15px] font-semibold tracking-[-0.01em] text-white">
-                Erizon
-              </div>
-              <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.28em] text-white/34">
+              <div className="text-[15px] font-semibold tracking-[-0.01em] text-white">Erizon</div>
+              <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.28em] text-[rgba(255,255,255,0.56)]">
                 Agency OS
               </div>
             </div>
@@ -65,39 +63,41 @@ export function AppHeader({ user }: { user: AppUser }) {
             <PrimaryNav orientation="vertical" />
           </div>
 
-          <div className="mt-auto border-t border-white/[0.06] pt-4">
-            <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <div className="flex min-w-0 items-center gap-3">
-                <Avatar user={user} size={32} rounded="rounded-full" />
-                <div className="min-w-0">
-                  <div className="truncate text-[12px] font-semibold text-white/88">
-                    {user.name}
-                  </div>
-                </div>
-              </div>
-
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="text-[11px] font-medium text-white/40 transition hover:text-white/72"
-                >
-                  Sair
-                </button>
-              </form>
+          <div className="mt-auto rounded-[16px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)] p-4 text-white">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(255,255,255,0.58)]">
+              Plano atual
             </div>
+            <div className="mt-2 text-sm font-semibold">Plano Pro</div>
+            <div className="mt-1 text-xs text-[rgba(255,255,255,0.68)]">8 de 12 espacos ativos</div>
+            <div className="mt-3 h-2 rounded-full bg-[rgba(255,255,255,0.12)]">
+              <div className="h-2 w-2/3 rounded-full bg-[var(--color-primary)]" />
+            </div>
+            <div className="mt-4 flex items-center gap-3 border-t border-[rgba(255,255,255,0.12)] pt-4">
+              <Avatar user={user} size={32} rounded="rounded-full" />
+              <div className="min-w-0">
+                <div className="truncate text-[12px] font-semibold text-white">{user.name}</div>
+                <div className="text-[11px] text-[rgba(255,255,255,0.58)]">Conta principal</div>
+              </div>
+            </div>
+            <form action="/auth/signout" method="post" className="mt-3">
+              <button
+                type="submit"
+                className="text-[11px] font-medium text-[rgba(255,255,255,0.72)] transition duration-150 hover:text-white"
+              >
+                Sair
+              </button>
+            </form>
           </div>
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0a0a0a] lg:hidden">
+      <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-white lg:hidden">
         <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link href="/" className="flex min-w-0 items-center gap-3 text-white">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-secondary)] text-black shadow-[0_10px_30px_rgba(20,184,166,0.16)]">
+          <Link href="/" className="flex min-w-0 items-center gap-3 text-[var(--color-text-1)]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)] text-white shadow-[0_10px_30px_rgba(108,99,255,0.24)]">
               <Sparkles className="h-4.5 w-4.5" />
             </div>
-            <div className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">
-              Erizon
-            </div>
+            <div className="truncate text-[15px] font-semibold tracking-[-0.01em]">Erizon</div>
           </Link>
 
           <form action="/auth/signout" method="post">
@@ -105,7 +105,7 @@ export function AppHeader({ user }: { user: AppUser }) {
               type="submit"
               title="Sair"
               aria-label="Sair"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03]"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border)] bg-white"
             >
               <Avatar user={user} size={32} rounded="rounded-full" />
             </button>

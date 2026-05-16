@@ -47,10 +47,10 @@ export function TemplateGallery({
             type="button"
             onClick={() => onFormatChange(format)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition",
+              "rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition duration-150",
               activeFormat === format
-                ? "border-white/22 bg-white text-black"
-                : "border-white/10 bg-white/5 text-white/62 hover:bg-white/10"
+                ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                : "border-[var(--color-border)] bg-white text-[var(--color-text-2)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             )}
           >
             {format === "all" ? "Todos" : FORMAT_LABELS[format]}
@@ -67,10 +67,10 @@ export function TemplateGallery({
             type="button"
             onClick={() => onCategoryChange(category)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-[11px] font-semibold transition",
+              "rounded-full border px-3 py-1.5 text-[11px] font-semibold transition duration-150",
               activeCategory === category
-                ? "border-white/22 bg-white text-black"
-                : "border-white/10 bg-white/5 text-white/62 hover:bg-white/10"
+                ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                : "border-[var(--color-border)] bg-white text-[var(--color-text-2)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             )}
           >
             {category === "all" ? "Todos" : CATEGORY_LABELS[category]}
@@ -86,8 +86,10 @@ export function TemplateGallery({
             <article
               key={template.id}
               className={cn(
-                "rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-3 transition",
-                isSelected && "ring-1 ring-white/18"
+                "rounded-[1.25rem] border bg-white p-3 transition duration-150",
+                isSelected
+                  ? "border-[var(--color-primary)] shadow-[0_6px_24px_rgba(108,99,255,0.12)]"
+                  : "border-[var(--color-border)] hover:shadow-[0_6px_20px_rgba(108,99,255,0.08)]"
               )}
             >
               <button
@@ -95,7 +97,7 @@ export function TemplateGallery({
                 onClick={() => onLoadTemplate(template)}
                 className="block w-full text-left"
               >
-                <div className="relative overflow-hidden rounded-[1rem] border border-white/10 bg-black/30">
+                <div className="relative overflow-hidden rounded-[1rem] border border-[var(--color-border)] bg-[#fbfaff]">
                   {template.thumbnail ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -109,7 +111,7 @@ export function TemplateGallery({
                   ) : (
                     <div
                       className={cn(
-                        "w-full bg-white/[0.04]",
+                        "w-full bg-[#f5f2ff]",
                         template.format === "story" ? "aspect-[9/16]" : "aspect-square"
                       )}
                     />
@@ -118,12 +120,14 @@ export function TemplateGallery({
 
                 <div className="mt-3 flex items-start justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-white">{template.name}</div>
-                    <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/40">
+                    <div className="text-sm font-semibold text-[var(--color-text-1)]">
+                      {template.name}
+                    </div>
+                    <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-3)]">
                       {FORMAT_LABELS[template.format]} · {CATEGORY_LABELS[template.category]}
                     </div>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/6 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-white/58">
+                  <div className="rounded-full border border-[var(--color-border)] bg-[#faf9ff] px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-2)]">
                     {template.is_default ? "Padrao" : template.client_id ? "Cliente" : "Seu"}
                   </div>
                 </div>
@@ -133,7 +137,7 @@ export function TemplateGallery({
                 <button
                   type="button"
                   onClick={() => onDeleteTemplate(template)}
-                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1.5 text-[11px] font-semibold text-red-100/82 transition hover:bg-red-500/16"
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-red-200 bg-[var(--color-danger-bg)] px-3 py-1.5 text-[11px] font-semibold text-[#b42318] transition duration-150 hover:bg-[#ffd9d9]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Excluir
@@ -144,7 +148,7 @@ export function TemplateGallery({
         })}
 
         {templates.length === 0 ? (
-          <div className="rounded-[1.25rem] border border-dashed border-white/10 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/48">
+          <div className="rounded-[1.25rem] border border-dashed border-[var(--color-border)] bg-[#fbfaff] px-4 py-8 text-center text-sm text-[var(--color-text-2)]">
             Nenhum template encontrado para esses filtros.
           </div>
         ) : null}

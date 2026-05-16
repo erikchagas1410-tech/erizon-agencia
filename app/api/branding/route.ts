@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import Groq from "groq-sdk";
 
 import {
   buildBrandingUserMessage,
   createBrandingMasterSystemPrompt
 } from "@/lib/branding-prompts";
-import { serverEnv } from "@/lib/env";
+import {
+  getGroqClient,
+  GROQ_VISION_MODEL,
+  readGroqText
+} from "@/lib/groq-client";
 import { serializeClient } from "@/lib/serializers";
 import { createClient } from "@/lib/supabase/server";
 import { brandChatRequestSchema } from "@/lib/validators";
@@ -13,14 +16,7 @@ import { brandChatRequestSchema } from "@/lib/validators";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const BRANDING_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const MAX_BRANDING_TOKENS = 1800;
-
-function getGroqClient() {
-  return new Groq({
-    apiKey: serverEnv.groqApiKey
-  });
-}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -29,7 +25,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return NextResponse.json({ error: "Nao autenticado." }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -37,7 +33,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message || "Dados inválidos para o Brand Lab." },
+      { error: parsed.error.issues[0]?.message || "Dados invalidos para o Brand Lab." },
       { status: 400 }
     );
   }
@@ -50,7 +46,7 @@ export async function POST(request: Request) {
 
   if (clientError || !clientRow) {
     return NextResponse.json(
-      { error: "Cliente não encontrado para esta conta." },
+      { error: "Cliente nao encontrado para esta conta." },
       { status: 404 }
     );
   }
@@ -123,7 +119,7 @@ export async function POST(request: Request) {
 
   try {
     const completion = await groq.chat.completions.create({
-      model: BRANDING_MODEL,
+      model: GROQ_VISION_MODEL,
       messages: [
         {
           role: "system",
@@ -138,8 +134,8 @@ export async function POST(request: Request) {
     });
 
     const content =
-      completion.choices[0]?.message?.content?.trim() ||
-      "Não consegui concluir a análise desta vez. Tente reformular o pedido.";
+      readGroqText(completion.choices[0]?.message?.content) ||
+      "Nao consegui concluir a analise desta vez. Tente reformular o pedido.";
 
     return NextResponse.json({ message: content });
   } catch (error) {

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownToLine,
@@ -13,10 +14,7 @@ import {
   X
 } from "lucide-react";
 
-import {
-  compositeLogoOnImage,
-  type LogoPosition
-} from "@/lib/logo-composer";
+import { compositeLogoOnImage, type LogoPosition } from "@/lib/logo-composer";
 import {
   buildPollinationsUrl,
   getFormatLabel,
@@ -34,6 +32,24 @@ interface ImageState {
   elapsed: number;
 }
 
+const FORMAT_META: Record<ImageFormat, { aspect: string; chip: string; description: string }> = {
+  feed: {
+    aspect: "aspect-square",
+    chip: "1:1",
+    description: "Feed Instagram"
+  },
+  story: {
+    aspect: "aspect-[9/16]",
+    chip: "9:16",
+    description: "Story / Reels"
+  },
+  carousel_cover: {
+    aspect: "aspect-square",
+    chip: "C",
+    description: "Capa de carrossel"
+  }
+};
+
 function buildInitialState(formats: ImageFormat[]): ImageState[] {
   return formats.map((format) => ({
     format,
@@ -48,54 +64,37 @@ function removeCompositedFormat(
   current: Record<string, string>,
   format: ImageFormat
 ): Record<string, string> {
-  if (!current[format]) return current;
+  if (!current[format]) {
+    return current;
+  }
+
   const next = { ...current };
   delete next[format];
   return next;
 }
 
-const FORMAT_META: Record<ImageFormat, { aspect: string; icon: string; description: string }> = {
-  feed: {
-    aspect: "aspect-square",
-    icon: "⬜",
-    description: "Feed Instagram 1:1"
-  },
-  story: {
-    aspect: "aspect-[9/16]",
-    icon: "📱",
-    description: "Story / Reels 9:16"
-  },
-  carousel_cover: {
-    aspect: "aspect-square",
-    icon: "🎠",
-    description: "Carrossel Cover 1:1"
-  }
-};
-
 function LoadingOrb() {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 h-full">
+    <div className="flex h-full flex-col items-center justify-center gap-4">
       <div className="relative">
-        {/* outer ring */}
-        <div className="h-14 w-14 rounded-full border border-white/10 animate-ping absolute inset-0 opacity-30" />
-        {/* spinning gradient ring */}
+        <div className="absolute inset-0 animate-ping rounded-full border border-[rgba(108,99,255,0.2)] opacity-60" />
         <div
-          className="h-14 w-14 rounded-full animate-spin"
+          className="h-14 w-14 animate-spin rounded-full"
           style={{
             background:
-              "conic-gradient(from 0deg, transparent 60%, rgba(124,58,237,0.8), rgba(20,184,166,0.6), transparent 100%)"
+              "conic-gradient(from 0deg, transparent 60%, rgba(108,99,255,0.92), rgba(16,185,129,0.68), transparent 100%)"
           }}
         />
-        {/* inner dot */}
-        <div className="absolute inset-2 rounded-full bg-[#0a0a0a] flex items-center justify-center">
-          <Sparkles className="h-4 w-4 text-white/60" />
+        <div className="absolute inset-2 flex items-center justify-center rounded-full bg-white shadow-[0_8px_24px_rgba(108,99,255,0.16)]">
+          <Sparkles className="h-4 w-4 text-[var(--color-primary)]" />
         </div>
       </div>
-      <div className="text-center space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40">
+
+      <div className="space-y-1 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
           Gerando imagem
         </p>
-        <p className="text-[10px] text-white/24">até 30 segundos</p>
+        <p className="text-[10px] text-[var(--color-text-3)]">ate 30 segundos</p>
       </div>
     </div>
   );
@@ -109,14 +108,17 @@ function ElapsedTimer({ active }: { active: boolean }) {
       setSeconds(0);
       return;
     }
-    const interval = setInterval(() => setSeconds((s) => s + 1), 1000);
+
+    const interval = setInterval(() => setSeconds((value) => value + 1), 1000);
     return () => clearInterval(interval);
   }, [active]);
 
-  if (!active) return null;
+  if (!active) {
+    return null;
+  }
 
   return (
-    <span className="font-mono text-[10px] text-white/30 tabular-nums">
+    <span className="font-mono text-[10px] tabular-nums text-[var(--color-text-3)]">
       {seconds}s
     </span>
   );
@@ -166,25 +168,27 @@ export function ImageGenerationPanel({
   }, [artDirectorOutput, client.id, client.logo_url, formatsToUse]);
 
   const hasReadyImages = useMemo(
-    () => images.some((img) => !!img.url && !img.loading),
+    () => images.some((image) => Boolean(image.url) && !image.loading),
     [images]
   );
+  const isAnyLoading = images.some((image) => image.loading);
+  const completedCount = images.filter((image) => Boolean(image.url) && !image.loading).length;
 
-  const isAnyLoading = images.some((img) => img.loading);
-  const completedCount = images.filter((img) => !!img.url && !img.loading).length;
-
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   function updateImage(format: ImageFormat, patch: Partial<ImageState>) {
     setImages((current) =>
-      current.map((img) =>
-        img.format === format ? { ...img, ...patch } : img
-      )
+      current.map((image) => (image.format === format ? { ...image, ...patch } : image))
     );
   }
 
   async function applyLogo(format: ImageFormat, baseUrl: string) {
-    if (!logoUrl) return;
+    if (!logoUrl) {
+      return;
+    }
+
     const result = await compositeLogoOnImage(baseUrl, logoUrl, logoPosition);
     setComposited((current) => ({ ...current, [format]: result }));
   }
@@ -194,32 +198,34 @@ export function ImageGenerationPanel({
       setLogoFeedback("Adicione uma logo primeiro.");
       return;
     }
-    const readyImages = images.filter((img) => !!img.url && !img.loading);
+
+    const readyImages = images.filter((image) => Boolean(image.url) && !image.loading);
+
     if (readyImages.length === 0) {
-      setLogoFeedback("Gere ao menos uma peça antes de aplicar a logo.");
+      setLogoFeedback("Gere ao menos uma peca antes de aplicar a logo.");
       return;
     }
+
     setIsApplyingLogo(true);
     setLogoFeedback(null);
+
     const results = await Promise.allSettled(
-      readyImages.map((img) => applyLogo(img.format, img.url as string))
+      readyImages.map((image) => applyLogo(image.format, image.url as string))
     );
-    const successCount = results.filter((r) => r.status === "fulfilled").length;
+    const successCount = results.filter((result) => result.status === "fulfilled").length;
+
     if (successCount === readyImages.length) {
       setLogoFeedback("✓ Logo aplicada com sucesso.");
     } else if (successCount > 0) {
       setLogoFeedback("Logo aplicada parcialmente. Revise antes de baixar.");
     } else {
-      setLogoFeedback("Não foi possível aplicar. Tente PNG ou WEBP com fundo transparente.");
+      setLogoFeedback("Nao foi possivel aplicar. Tente PNG ou WEBP com fundo transparente.");
     }
+
     setIsApplyingLogo(false);
   }
 
-  async function generateSingle(
-    format: ImageFormat,
-    index: number,
-    currentRound: number
-  ) {
+  function generateSingle(format: ImageFormat, index: number, currentRound: number) {
     setComposited((current) => removeCompositedFormat(current, format));
     updateImage(format, { loading: true, error: false, url: null, elapsed: 0 });
 
@@ -234,27 +240,25 @@ export function ImageGenerationPanel({
       round: currentRound
     });
 
-    const img = new Image();
-    img.onload = () => {
+    const image = new Image();
+    image.onload = () => {
       updateImage(format, { url, loading: false });
       onImageGenerated?.(url);
     };
-    img.onerror = () => updateImage(format, { loading: false, error: true });
-    img.src = url;
+    image.onerror = () => updateImage(format, { loading: false, error: true });
+    image.src = url;
   }
 
-  async function generateAll() {
+  function generateAll() {
     const nextRound = round + 1;
     setRound(nextRound);
     setHasGenerated(true);
     setLogoFeedback(null);
     setComposited({});
-    formatsToUse.forEach((format, index) => {
-      generateSingle(format, index, nextRound);
-    });
+    formatsToUse.forEach((format, index) => generateSingle(format, index, nextRound));
   }
 
-  async function regenerateSingle(format: ImageFormat) {
+  function regenerateSingle(format: ImageFormat) {
     const index = formatsToUse.indexOf(format);
     const singleRound = round + index + 10;
     setLogoFeedback(null);
@@ -262,9 +266,13 @@ export function ImageGenerationPanel({
     generateSingle(format, index, singleRound);
   }
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
+
+    if (!file) {
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setLogoUrl(reader.result as string);
@@ -276,116 +284,110 @@ export function ImageGenerationPanel({
 
   return (
     <div className="space-y-5">
-      {/* ── Header + CTA ─────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(124,58,237,0.28), rgba(20,184,166,0.18))",
-              border: "1px solid rgba(124,58,237,0.3)"
-            }}
-          >
-            <Sparkles className="h-4 w-4 text-violet-300" />
+          <div className="icon-box icon-box-violet flex h-10 w-10 items-center justify-center border border-[var(--color-border)] shadow-[0_6px_20px_rgba(108,99,255,0.1)]">
+            <Sparkles className="h-4 w-4" />
           </div>
+
           <div>
-            <h3 className="text-sm font-semibold text-white leading-tight">
-              {isReferenceMode ? "Referência Visual" : "Geração de Backgrounds"}
+            <h3 className="text-sm font-semibold leading-tight text-[var(--color-text-1)]">
+              {isReferenceMode ? "Referencia visual" : "Geracao de backgrounds"}
             </h3>
-            <p className="text-[11px] text-white/40 mt-0.5">
+            <p className="mt-0.5 text-[11px] text-[var(--color-text-2)]">
               {isReferenceMode
-                ? "Fundo atmosférico para usar no editor"
-                : "3 formatos gerados pela IA a partir do brief"}
+                ? "Fundo atmosferico para usar no editor"
+                : "Tres formatos gerados pela IA a partir do brief"}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {hasReadyImages && !isReferenceMode && (
+          {hasReadyImages && !isReferenceMode ? (
             <button
               type="button"
-              onClick={() => setShowLogoPanel((v) => !v)}
+              onClick={() => setShowLogoPanel((current) => !current)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition",
+                "inline-flex items-center gap-1.5 rounded-[10px] border px-3.5 py-2 text-xs font-semibold transition duration-150",
                 showLogoPanel
-                  ? "bg-white/10 text-white border border-white/20"
-                  : "border border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/8 hover:text-white/80"
+                  ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                  : "border-[var(--color-border)] bg-white text-[var(--color-text-2)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
               )}
             >
               <Layers className="h-3.5 w-3.5" />
               Logo
             </button>
-          )}
+          ) : null}
 
           <button
             type="button"
             onClick={generateAll}
             disabled={isAnyLoading}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-black transition hover:-translate-y-px hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-4 py-2.5 text-xs font-bold text-white transition duration-150 hover:bg-[#5A4FE8] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Wand2 className="h-3.5 w-3.5" />
             {isAnyLoading
               ? "Gerando..."
               : hasGenerated
-              ? isReferenceMode
-                ? "Nova referência"
-                : "Gerar novamente"
-              : isReferenceMode
-              ? "Gerar referência"
-              : "Gerar backgrounds"}
+                ? isReferenceMode
+                  ? "Nova referencia"
+                  : "Gerar novamente"
+                : isReferenceMode
+                  ? "Gerar referencia"
+                  : "Gerar backgrounds"}
           </button>
         </div>
       </div>
 
-      {/* ── Progress bar when loading ─────────────────── */}
-      {isAnyLoading && !isReferenceMode && (
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 flex items-center gap-3">
-          <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+      {isAnyLoading && !isReferenceMode ? (
+        <div className="card flex items-center gap-3 rounded-[16px] px-4 py-3">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#ece9ff]">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${(completedCount / formatsToUse.length) * 100}%`,
                 background:
-                  "linear-gradient(90deg, rgba(124,58,237,0.9), rgba(20,184,166,0.7))"
+                  "linear-gradient(90deg, rgba(108,99,255,0.95), rgba(16,185,129,0.8))"
               }}
             />
           </div>
-          <span className="text-[11px] text-white/40 shrink-0 tabular-nums font-mono">
+          <span className="shrink-0 font-mono text-[11px] tabular-nums text-[var(--color-text-2)]">
             {completedCount}/{formatsToUse.length} prontos
           </span>
         </div>
-      )}
+      ) : null}
 
-      {/* ── Logo panel ────────────────────────────────── */}
-      {showLogoPanel && hasReadyImages && !isReferenceMode && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-4">
-          <div className="flex items-center justify-between">
+      {showLogoPanel && hasReadyImages && !isReferenceMode ? (
+        <div className="card space-y-4 rounded-[16px] p-4">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold text-white">Compor logo da marca</p>
-              <p className="text-[11px] text-white/40 mt-0.5">
+              <p className="text-xs font-semibold text-[var(--color-text-1)]">
+                Compor logo da marca
+              </p>
+              <p className="mt-0.5 text-[11px] text-[var(--color-text-2)]">
                 Aplicada no navegador, por cima da imagem, sem depender do gerador.
               </p>
             </div>
+
             <button
               type="button"
               onClick={() => setShowLogoPanel(false)}
-              className="text-white/30 hover:text-white/60 transition"
+              className="text-[var(--color-text-3)] transition duration-150 hover:text-[var(--color-text-1)]"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Upload */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
+              className="inline-flex items-center gap-1.5 rounded-[10px] border border-[var(--color-border)] bg-white px-3.5 py-2 text-xs font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             >
               <Upload className="h-3.5 w-3.5" />
               {logoUrl ? "Trocar logo" : "Adicionar logo"}
             </button>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -394,16 +396,15 @@ export function ImageGenerationPanel({
               onChange={handleFileChange}
             />
 
-            {/* Position selector */}
-            {logoUrl && (
+            {logoUrl ? (
               <select
                 value={logoPosition}
-                onChange={(e) => {
-                  setLogoPosition(e.target.value as LogoPosition);
+                onChange={(event) => {
+                  setLogoPosition(event.target.value as LogoPosition);
                   setComposited({});
-                  setLogoFeedback("Posição atualizada. Clique em aplicar.");
+                  setLogoFeedback("Posicao atualizada. Clique em aplicar.");
                 }}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 outline-none focus:border-violet-500/50"
+                className="input-shell min-w-[180px] rounded-[10px] px-3 py-2 text-xs"
               >
                 <option value="bottom-right">Inferior direito</option>
                 <option value="bottom-left">Inferior esquerdo</option>
@@ -411,162 +412,146 @@ export function ImageGenerationPanel({
                 <option value="top-right">Superior direito</option>
                 <option value="top-left">Superior esquerdo</option>
               </select>
-            )}
+            ) : null}
 
-            {/* Apply button */}
-            {logoUrl && (
+            {logoUrl ? (
               <button
                 type="button"
                 onClick={applyLogoToLoadedImages}
                 disabled={isApplyingLogo || isAnyLoading}
-                className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 px-3.5 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-[rgba(108,99,255,0.2)] bg-[var(--color-primary-light)] px-3.5 py-2 text-xs font-semibold text-[var(--color-primary)] transition duration-150 hover:bg-[#e4ddff] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Wand2 className="h-3.5 w-3.5" />
                 {isApplyingLogo ? "Aplicando..." : "Aplicar logo"}
               </button>
-            )}
+            ) : null}
           </div>
 
-          {logoFeedback && (
+          {logoFeedback ? (
             <div
               className={cn(
                 "rounded-xl border px-3 py-2 text-xs",
                 logoFeedback.startsWith("✓")
-                  ? "border-teal-500/20 bg-teal-500/8 text-teal-300"
-                  : "border-white/10 bg-white/4 text-white/60"
+                  ? "border-emerald-200 bg-[var(--color-success-bg)] text-[#065f46]"
+                  : "border-[var(--color-border)] bg-[#faf9ff] text-[var(--color-text-2)]"
               )}
             >
               {logoFeedback}
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* ── Image grid ────────────────────────────────── */}
       <div
         className={cn(
           "grid gap-4",
-          isReferenceMode ? "grid-cols-1 max-w-sm" : "grid-cols-1 sm:grid-cols-3"
+          isReferenceMode ? "max-w-sm grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
         )}
       >
-        {images.map((img) => {
-          const displayUrl = composited[img.format] ?? img.url;
-          const meta = FORMAT_META[img.format];
-          const hasLogo = !!composited[img.format];
+        {images.map((image) => {
+          const displayUrl = composited[image.format] ?? image.url;
+          const meta = FORMAT_META[image.format];
+          const hasLogo = Boolean(composited[image.format]);
 
           return (
-            <div key={img.format} className="group relative">
-              {/* Format label */}
+            <div key={image.format} className="group relative">
               <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px]">{meta.icon}</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-widest text-white/38">
-                    {getFormatLabel(img.format)}
+                  <span className="inline-flex min-w-[32px] items-center justify-center rounded-full border border-[var(--color-border)] bg-white px-2 py-1 text-[10px] font-semibold text-[var(--color-primary)]">
+                    {meta.chip}
                   </span>
-                  {hasLogo && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-teal-500/20 bg-teal-500/8 px-1.5 py-0.5 text-[9px] font-semibold text-teal-400">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-3)]">
+                    {getFormatLabel(image.format)}
+                  </span>
+                  {hasLogo ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-[var(--color-success-bg)] px-1.5 py-0.5 text-[9px] font-semibold text-[#065f46]">
                       <CheckCircle2 className="h-2.5 w-2.5" />
                       Logo
                     </span>
-                  )}
+                  ) : null}
                 </div>
+
                 <div className="flex items-center gap-1.5">
-                  <ElapsedTimer active={img.loading} />
-                  {img.url && !img.loading && (
+                  <ElapsedTimer active={image.loading} />
+                  {image.url && !image.loading ? (
                     <button
                       type="button"
-                      onClick={() => regenerateSingle(img.format)}
-                      className="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] text-white/50 hover:text-white/80 hover:bg-white/10"
+                      onClick={() => regenerateSingle(image.format)}
+                      className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-white px-2.5 py-1 text-[10px] text-[var(--color-text-2)] opacity-0 transition duration-150 group-hover:opacity-100 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                     >
                       <RefreshCw className="h-2.5 w-2.5" />
                       Regerar
                     </button>
-                  )}
-                  {img.error && (
+                  ) : null}
+                  {image.error ? (
                     <button
                       type="button"
-                      onClick={() => regenerateSingle(img.format)}
-                      className="inline-flex items-center gap-1 rounded-full border border-red-400/20 bg-red-400/8 px-2.5 py-1 text-[10px] text-red-400 hover:bg-red-400/15"
+                      onClick={() => regenerateSingle(image.format)}
+                      className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-[var(--color-danger-bg)] px-2.5 py-1 text-[10px] text-[#b42318]"
                     >
                       <RefreshCw className="h-2.5 w-2.5" />
                       Tentar novamente
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
-              {/* Image container */}
               <div
                 className={cn(
-                  "relative overflow-hidden rounded-2xl border border-white/8",
+                  "relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-[0_2px_12px_rgba(108,99,255,0.06)]",
                   meta.aspect,
-                  displayUrl ? "bg-black" : "bg-white/[0.025]"
+                  displayUrl ? "bg-[#f1efff]" : "bg-[#fcfbff]"
                 )}
               >
-                {/* Empty state */}
-                {!img.loading && !img.url && !img.error && (
+                {!image.loading && !image.url && !image.error ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(20,184,166,0.08))",
-                        border: "1px dashed rgba(255,255,255,0.1)"
-                      }}
-                    >
-                      <Wand2 className="h-5 w-5 text-white/20" />
+                    <div className="icon-box icon-box-violet flex h-12 w-12 items-center justify-center border border-[var(--color-border)]">
+                      <Wand2 className="h-5 w-5" />
                     </div>
-                    <p className="text-[11px] text-white/24 text-center px-6 leading-relaxed">
+                    <p className="px-6 text-center text-[11px] leading-relaxed text-[var(--color-text-3)]">
                       {isReferenceMode
-                        ? "Clique em gerar referência"
-                        : `Clique em "Gerar backgrounds"`}
+                        ? "Clique em gerar referencia"
+                        : 'Clique em "Gerar backgrounds"'}
                     </p>
                   </div>
-                )}
+                ) : null}
 
-                {/* Loading state */}
-                {img.loading && <LoadingOrb />}
+                {image.loading ? <LoadingOrb /> : null}
 
-                {/* Error state */}
-                {img.error && !img.loading && (
+                {image.error && !image.loading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-400/20 bg-red-400/8">
-                      <ImageOff className="h-4 w-4 text-red-400/60" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-[var(--color-danger-bg)]">
+                      <ImageOff className="h-4 w-4 text-[var(--color-danger)]" />
                     </div>
-                    <p className="text-[11px] text-red-300/50">
-                      Falha ao gerar
-                    </p>
+                    <p className="text-[11px] text-[#b42318]">Falha ao gerar</p>
                   </div>
-                )}
+                ) : null}
 
-                {/* Generated image */}
-                {displayUrl && !img.loading && (
+                {displayUrl && !image.loading ? (
                   <img
                     src={displayUrl}
-                    alt={getFormatLabel(img.format)}
+                    alt={getFormatLabel(image.format)}
                     className="h-full w-full object-cover transition-opacity duration-700"
                   />
-                )}
+                ) : null}
 
-                {/* Hover overlay with download */}
-                {displayUrl && !img.loading && (
-                  <div className="absolute inset-0 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-t from-black/60 via-transparent">
+                {displayUrl && !image.loading ? (
+                  <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-[rgba(26,26,46,0.62)] via-transparent pb-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                     <a
                       href={displayUrl}
-                      download={`${client.name}-${img.format}-r${round}.png`}
+                      download={`${client.name}-${image.format}-r${round}.png`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-[11px] font-bold text-black hover:bg-white transition backdrop-blur-sm"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[11px] font-bold text-[var(--color-text-1)] transition duration-150 hover:bg-[#f4f1ff]"
                     >
                       <ArrowDownToLine className="h-3.5 w-3.5" />
                       {hasLogo ? "Baixar com logo" : "Baixar"}
                     </a>
                   </div>
-                )}
+                ) : null}
               </div>
 
-              {/* Description */}
-              <p className="mt-1.5 text-[10px] text-white/24 text-center">
+              <p className="mt-1.5 text-center text-[10px] text-[var(--color-text-3)]">
                 {meta.description}
               </p>
             </div>
@@ -574,13 +559,13 @@ export function ImageGenerationPanel({
         })}
       </div>
 
-      {/* ── Bottom hint ──────────────────────────────── */}
-      {hasReadyImages && (
-        <p className="text-center text-[11px] text-white/28 leading-relaxed">
-          Passe o mouse sobre a imagem para baixar · Clique em{" "}
-          <span className="text-white/44">Regerar</span> para explorar variações
+      {hasReadyImages ? (
+        <p className="text-center text-[11px] leading-relaxed text-[var(--color-text-2)]">
+          Passe o mouse sobre a imagem para baixar. Clique em{" "}
+          <span className="font-semibold text-[var(--color-primary)]">Regerar</span> para
+          explorar variacoes.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

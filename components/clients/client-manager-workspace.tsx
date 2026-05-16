@@ -291,14 +291,14 @@ function BrandAnalyzerModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/72 backdrop-blur-sm"
+        className="absolute inset-0 bg-[rgba(26,26,46,0.38)]"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/12 bg-[#0d0d0f] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/8 px-6 py-5">
+      <div className="card relative w-full max-w-xl overflow-hidden rounded-[24px]">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-5">
           <div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]">
               <ScanSearch className="h-3.5 w-3.5" />
               IA de Branding
             </div>
@@ -309,7 +309,7 @@ function BrandAnalyzerModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition hover:bg-white/10"
+            className="rounded-full border border-[var(--color-border)] bg-white p-2 text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -318,7 +318,7 @@ function BrandAnalyzerModal({
         <div className="p-6">
           {state.status === "idle" && (
             <div>
-              <p className="mb-5 text-sm leading-6 text-white/62">
+              <p className="mb-5 text-sm leading-6 text-[var(--color-text-2)]">
                 Envie o logo, uma referência visual ou qualquer material da marca.
                 A IA vai analisar e preencher automaticamente os campos do cadastro.
               </p>
@@ -326,15 +326,15 @@ function BrandAnalyzerModal({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex w-full flex-col items-center justify-center gap-3 rounded-[1.5rem] border border-dashed border-white/14 bg-white/[0.03] py-10 transition hover:bg-white/[0.06]"
+                className="flex w-full flex-col items-center justify-center gap-3 rounded-[20px] border border-dashed border-[var(--color-border)] bg-[#fbfaff] py-10 transition duration-150 hover:bg-[var(--color-primary-light)]"
               >
-                <div className="rounded-full border border-white/10 bg-white/6 p-4">
-                  <Upload className="h-6 w-6 text-white/50" />
+                <div className="icon-box icon-box-violet flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-border)]">
+                  <Upload className="h-6 w-6" />
                 </div>
-                <div className="text-sm text-white/60">
+                <div className="text-sm text-[var(--color-text-1)]">
                   Clique para selecionar uma imagem
                 </div>
-                <div className="text-xs text-white/36">PNG, JPG, WEBP ou SVG — até 5 MB</div>
+                <div className="text-xs text-[var(--color-text-3)]">PNG, JPG, WEBP ou SVG ate 5 MB</div>
               </button>
 
               <input
@@ -349,18 +349,18 @@ function BrandAnalyzerModal({
 
           {state.status === "preview" && (
             <div>
-              <div className="mb-5 overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/30">
+              <div className="mb-5 overflow-hidden rounded-[20px] border border-[var(--color-border)] bg-[#fbfaff]">
                 <img
                   src={state.dataUrl}
                   alt={state.fileName}
                   className="max-h-56 w-full object-contain p-4"
                 />
-                <div className="border-t border-white/8 px-4 py-3 text-xs text-white/44">
+                <div className="border-t border-[var(--color-border)] px-4 py-3 text-xs text-[var(--color-text-3)]">
                   {state.fileName}
                 </div>
               </div>
 
-              <p className="mb-5 text-sm text-white/60">
+              <p className="mb-5 text-sm text-[var(--color-text-2)]">
                 A IA vai analisar esta imagem e preencher todos os campos de
                 identidade da marca automaticamente. Você poderá revisar antes de
                 salvar.
@@ -370,14 +370,14 @@ function BrandAnalyzerModal({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                 >
                   Trocar imagem
                 </button>
                 <button
                   type="button"
                   onClick={handleAnalyze}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8]"
                 >
                   <ScanSearch className="h-4 w-4" />
                   Analisar com IA
@@ -389,34 +389,34 @@ function BrandAnalyzerModal({
           {state.status === "analyzing" && (
             <div className="flex flex-col items-center gap-5 py-10 text-center">
               <div className="relative">
-                <div className="h-14 w-14 animate-spin rounded-full border-2 border-white/10 border-t-white/70" />
-                <ScanSearch className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white/50" />
+                <div className="h-14 w-14 animate-spin rounded-full border-2 border-[rgba(108,99,255,0.16)] border-t-[var(--color-primary)]" />
+                <ScanSearch className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-[var(--color-primary)]" />
               </div>
               <div>
                 <div className="font-heading text-lg font-semibold">Analisando a marca…</div>
-                <div className="mt-2 text-sm text-white/50">
+                <div className="mt-2 text-sm text-[var(--color-text-2)]">
                   A IA está lendo cores, estética e identidade visual.
                   <br />
                   Isso leva alguns segundos.
                 </div>
               </div>
               <div className="mt-2 w-full max-w-xs space-y-2">
-                <div className="h-2 w-full animate-pulse rounded-full bg-white/8" />
-                <div className="h-2 w-4/5 animate-pulse rounded-full bg-white/6" />
-                <div className="h-2 w-3/5 animate-pulse rounded-full bg-white/5" />
+                <div className="h-2 w-full animate-pulse rounded-full bg-[#ece9ff]" />
+                <div className="h-2 w-4/5 animate-pulse rounded-full bg-[#f0edff]" />
+                <div className="h-2 w-3/5 animate-pulse rounded-full bg-[#f4f2ff]" />
               </div>
             </div>
           )}
 
           {state.status === "done" && (
             <div>
-              <div className="mb-5 rounded-[1.5rem] border border-emerald-400/20 bg-emerald-500/8 px-4 py-3">
-                <div className="text-sm font-semibold text-emerald-300">
+              <div className="mb-5 rounded-[20px] border border-emerald-200 bg-[var(--color-success-bg)] px-4 py-3">
+                <div className="text-sm font-semibold text-[#065f46]">
                   Análise concluída
                 </div>
-                <div className="mt-1 text-sm text-white/60">
+                <div className="mt-1 text-sm text-[var(--color-text-2)]">
                   Revise os campos abaixo e clique em{" "}
-                  <strong className="text-white">Aplicar ao formulário</strong> para
+                  <strong className="text-[var(--color-text-1)]">Aplicar ao formulário</strong> para
                   preencher o cadastro. Você pode editar qualquer campo depois.
                 </div>
               </div>
@@ -439,11 +439,11 @@ function BrandAnalyzerModal({
                   }
 
                   return (
-                    <div key={key} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">
+                    <div key={key} className="rounded-2xl border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-3)]">
                         {label}
                       </div>
-                      <div className="text-sm leading-6 text-white/80">
+                      <div className="text-sm leading-6 text-[var(--color-text-1)]">
                         {String(value)}
                       </div>
                       {key === "brand_colors" && previewColors.length > 0 && (
@@ -454,10 +454,10 @@ function BrandAnalyzerModal({
                               className="flex items-center gap-2"
                             >
                               <div
-                                className="h-7 w-7 rounded-xl border border-white/10"
+                                className="h-7 w-7 rounded-xl border border-[var(--color-border)]"
                                 style={{ backgroundColor: color }}
                               />
-                              <span className="text-xs text-white/44">{color}</span>
+                              <span className="text-xs text-[var(--color-text-3)]">{color}</span>
                             </div>
                           ))}
                         </div>
@@ -471,7 +471,7 @@ function BrandAnalyzerModal({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                 >
                   Nova imagem
                 </button>
@@ -481,7 +481,7 @@ function BrandAnalyzerModal({
                     onApply(state.fields);
                     onClose();
                   }}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8]"
                 >
                   Aplicar ao formulário
                 </button>
@@ -490,7 +490,7 @@ function BrandAnalyzerModal({
           )}
 
           {error && (
-            <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+            <div className="mt-4 rounded-2xl border border-red-200 bg-[var(--color-danger-bg)] px-4 py-3 text-sm text-[#b42318]">
               {error}
             </div>
           )}
@@ -782,7 +782,7 @@ export function ClientManagerWorkspace({
         />
       )}
 
-      <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
+      <section className="card rounded-[2rem] p-6 sm:p-8">
         <div className="grid gap-8 xl:grid-cols-[1fr,1.4fr]">
           <div>
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -794,7 +794,7 @@ export function ClientManagerWorkspace({
                 <h1 className="mt-4 font-heading text-3xl font-semibold">
                   Cadastro completo de clientes
                 </h1>
-                <p className="mt-3 text-sm text-white/64">
+                <p className="mt-3 text-sm text-[var(--color-text-2)]">
                   Cadastre uma vez e use a identidade completa em todas as próximas
                   produções.
                 </p>
@@ -803,7 +803,7 @@ export function ClientManagerWorkspace({
               <button
                 type="button"
                 onClick={handleNewClient}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8]"
               >
                 <Plus className="h-4 w-4" />
                 Novo
@@ -812,7 +812,7 @@ export function ClientManagerWorkspace({
 
             <div className="space-y-3">
               {clients.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-sm text-white/54">
+                <div className="rounded-3xl border border-dashed border-[var(--color-border)] bg-[#fbfaff] px-4 py-10 text-center text-sm text-[var(--color-text-2)]">
                   Nenhum cliente cadastrado ainda. Comece preenchendo o formulário ao
                   lado.
                 </div>
@@ -828,19 +828,19 @@ export function ClientManagerWorkspace({
                     onClick={() => setSelectedClientId(client.id)}
                     className={`w-full rounded-3xl border px-4 py-4 text-left transition ${
                       active
-                        ? "border-white/18 bg-white/10"
-                        : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]"
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary-light)]"
+                        : "border-[var(--color-border)] bg-white hover:bg-[#fbfaff]"
                     }`}
                   >
-                    <div className="font-semibold text-white">{client.name}</div>
-                    <div className="mt-2 line-clamp-2 text-sm text-white/62">
+                    <div className="font-semibold text-[var(--color-text-1)]">{client.name}</div>
+                    <div className="mt-2 line-clamp-2 text-sm text-[var(--color-text-2)]">
                       {client.voice_tone}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {client.content_pillars.slice(0, 3).map((pillar) => (
                         <span
                           key={pillar}
-                          className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] text-white/68"
+                          className="rounded-full border border-[var(--color-border)] bg-[#faf9ff] px-3 py-1 text-[11px] text-[var(--color-text-2)]"
                         >
                           {pillar}
                         </span>
@@ -853,10 +853,10 @@ export function ClientManagerWorkspace({
           </div>
 
           {previewTheme ? (
-            <div className="glass-panel rounded-[1.75rem] p-5">
+            <div className="card rounded-[1.75rem] p-5">
               <div className="mb-4">
                 <h2 className="font-heading text-xl font-semibold">Preview visual da marca</h2>
-                <p className="mt-2 text-sm text-white/56">
+                <p className="mt-2 text-sm text-[var(--color-text-2)]">
                   Estimativa do tema que o sistema vai usar como referência para o Art
                   Director.
                 </p>
@@ -899,7 +899,7 @@ export function ClientManagerWorkspace({
                   </div>
 
                   <div
-                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border backdrop-blur-sm"
+                  className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border"
                     style={{
                       borderColor:
                         previewTextColor === "#050505"
@@ -930,7 +930,7 @@ export function ClientManagerWorkspace({
 
                 <div className="relative mt-6 grid gap-3 sm:grid-cols-[1.15fr,0.85fr]">
                   <div
-                    className="rounded-[1.35rem] border p-4 backdrop-blur-sm"
+                    className="rounded-[1.35rem] border p-4"
                     style={{
                       borderColor:
                         previewTextColor === "#050505"
@@ -996,13 +996,13 @@ export function ClientManagerWorkspace({
         </div>
       </section>
 
-      <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
+      <section className="card rounded-[2rem] p-6 sm:p-8">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-heading text-3xl font-semibold">
               {selectedClient ? "Editar cliente" : "Novo cliente"}
             </h2>
-            <p className="mt-2 text-sm text-white/62">
+            <p className="mt-2 text-sm text-[var(--color-text-2)]">
               Preencha todos os campos para que os 5 agentes trabalhem com briefing
               completo.
             </p>
@@ -1012,7 +1012,7 @@ export function ClientManagerWorkspace({
             <button
               type="button"
               onClick={() => setShowAnalyzer(true)}
-              className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/12 px-4 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[rgba(108,99,255,0.18)] bg-[var(--color-primary-light)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] transition duration-150 hover:bg-[#e4ddff]"
             >
               <ScanSearch className="h-4 w-4" />
               Preencher com imagem
@@ -1023,7 +1023,7 @@ export function ClientManagerWorkspace({
                 type="button"
                 onClick={handleDelete}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 rounded-full border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-500/16 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-[10px] border border-red-200 bg-[var(--color-danger-bg)] px-4 py-3 text-sm font-semibold text-[#b42318] transition duration-150 hover:bg-[#ffd9d9] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
                 Excluir
@@ -1033,9 +1033,9 @@ export function ClientManagerWorkspace({
         </div>
 
         {aiFilledKeys.size > 0 && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-violet-400/20 bg-violet-500/8 px-4 py-3">
-            <ScanSearch className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" />
-            <div className="text-sm text-violet-200">
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-[rgba(108,99,255,0.18)] bg-[var(--color-primary-light)] px-4 py-3">
+            <ScanSearch className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+            <div className="text-sm text-[var(--color-primary)]">
               <strong>{aiFilledKeys.size} campos</strong> foram preenchidos pela IA.
               Os campos destacados em roxo foram gerados automaticamente — revise antes de salvar.
             </div>
@@ -1043,7 +1043,7 @@ export function ClientManagerWorkspace({
         )}
 
         {feedback ? (
-          <div className="mb-6 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/80">
+          <div className="mb-6 rounded-2xl border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
             {feedback}
           </div>
         ) : null}
@@ -1061,9 +1061,9 @@ export function ClientManagerWorkspace({
                   className={`block space-y-2 ${WIDE_FIELDS.has(field.key) ? "sm:col-span-2" : ""}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white/84">{field.label}</span>
+                    <span className="text-sm font-medium text-[var(--color-text-1)]">{field.label}</span>
                     {isAiFilled && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(108,99,255,0.18)] bg-[var(--color-primary-light)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                         <ScanSearch className="h-2.5 w-2.5" />
                         IA
                       </span>
@@ -1119,12 +1119,12 @@ export function ClientManagerWorkspace({
             })}
 
             <div className="block space-y-3 sm:col-span-2">
-              <span className="text-sm font-medium text-white/84">Logo da Marca</span>
+              <span className="text-sm font-medium text-[var(--color-text-1)]">Logo da Marca</span>
 
-              <div className="rounded-[1.5rem] border border-dashed border-white/12 bg-white/[0.03] p-4">
+              <div className="rounded-[1.5rem] border border-dashed border-[var(--color-border)] bg-[#fbfaff] p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.04]">
+                    <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border border-[var(--color-border)] bg-white">
                       {formValues.logo_url ? (
                         <img
                           src={formValues.logo_url}
@@ -1132,7 +1132,7 @@ export function ClientManagerWorkspace({
                           className="h-full w-full object-contain p-3"
                         />
                       ) : (
-                        <div className="text-center text-xs leading-5 text-white/42">
+                        <div className="text-center text-xs leading-5 text-[var(--color-text-3)]">
                           Sem
                           <br />
                           logo
@@ -1141,10 +1141,10 @@ export function ClientManagerWorkspace({
                     </div>
 
                     <div className="max-w-md">
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-[var(--color-text-1)]">
                         Upload direto para a identidade da marca
                       </div>
-                      <div className="mt-1 text-sm text-white/58">
+                      <div className="mt-1 text-sm text-[var(--color-text-2)]">
                         Envie PNG, JPG, WEBP ou SVG com até 2 MB. A logo passa a
                         aparecer no preview imediatamente e pode ser usada nas peças
                         geradas.
@@ -1153,7 +1153,7 @@ export function ClientManagerWorkspace({
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]">
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8]">
                       <Upload className="h-4 w-4" />
                       {formValues.logo_url ? "Trocar logo" : "Enviar logo"}
                       <input
@@ -1168,7 +1168,7 @@ export function ClientManagerWorkspace({
                       <button
                         type="button"
                         onClick={handleRemoveLogo}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/82 transition hover:bg-white/[0.08]"
+                        className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[#fbfaff] hover:text-[var(--color-text-1)]"
                       >
                         <X className="h-4 w-4" />
                         Remover
@@ -1181,11 +1181,11 @@ export function ClientManagerWorkspace({
 
             <label className="block space-y-2 sm:col-span-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-white/84">
+                <span className="text-sm font-medium text-[var(--color-text-1)]">
                   Paleta de Cores da Marca
                 </span>
                 {aiFilledKeys.has("brand_colors") && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(108,99,255,0.18)] bg-[var(--color-primary-light)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                     <ScanSearch className="h-2.5 w-2.5" />
                     IA
                   </span>
@@ -1218,7 +1218,7 @@ export function ClientManagerWorkspace({
                   {brandColorSwatches.map((color, index) => (
                     <div
                       key={`${color}-${index}`}
-                      className="h-10 w-10 flex-shrink-0 rounded-xl border border-white/10"
+                      className="h-10 w-10 flex-shrink-0 rounded-xl border border-[var(--color-border)]"
                       style={{ backgroundColor: color }}
                       title={color}
                     />
@@ -1231,7 +1231,7 @@ export function ClientManagerWorkspace({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
             {isSubmitting

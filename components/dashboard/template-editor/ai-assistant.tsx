@@ -82,8 +82,7 @@ export function AIAssistant({
     const seedBase = Math.floor(Date.now() % 1000);
     const url = buildPollinationsUrl({
       artDirectorBrief:
-        instruction ||
-        `${client.value_proposition}. Categoria ${CATEGORY_LABELS[category]}.`,
+        instruction || `${client.value_proposition}. Categoria ${CATEGORY_LABELS[category]}.`,
       clientName: client.name,
       visualAesthetic: client.visual_aesthetic,
       brandColors: client.brand_colors,
@@ -97,31 +96,29 @@ export function AIAssistant({
   }
 
   return (
-    <section className="rounded-[1.8rem] border border-white/10 bg-white/[0.03] p-4">
+    <section className="card rounded-[1.8rem] p-4">
       <button
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <div className="text-sm font-semibold text-white">Criar com IA</div>
-          <div className="mt-1 text-xs text-white/44">
+          <div className="text-sm font-semibold text-[var(--color-text-1)]">Criar com IA</div>
+          <div className="mt-1 text-xs text-[var(--color-text-2)]">
             Gere layouts, fundos visuais e sugestoes de texto a partir da marca.
           </div>
         </div>
         {open ? (
-          <ChevronUp className="h-4 w-4 text-white/54" />
+          <ChevronUp className="h-4 w-4 text-[var(--color-text-3)]" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-white/54" />
+          <ChevronDown className="h-4 w-4 text-[var(--color-text-3)]" />
         )}
       </button>
 
       {open ? (
         <div className="mt-5 space-y-4">
           <label className="block space-y-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
-              Descreva o que voce quer
-            </span>
+            <span className="label">Descreva o que voce quer</span>
             <textarea
               value={instruction}
               onChange={(event) => setInstruction(event.target.value)}
@@ -138,10 +135,10 @@ export function AIAssistant({
                 type="button"
                 onClick={() => setCategory(chip)}
                 className={cn(
-                  "rounded-full border px-3 py-2 text-xs font-semibold transition",
+                  "rounded-full border px-3 py-2 text-xs font-semibold transition duration-150",
                   category === chip
-                    ? "border-white/22 bg-white text-black"
-                    : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                    : "border-[var(--color-border)] bg-white text-[var(--color-text-2)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
                 )}
               >
                 {CATEGORY_LABELS[chip]}
@@ -154,7 +151,7 @@ export function AIAssistant({
               type="button"
               disabled={isGenerating}
               onClick={() => onGenerateTemplate(instruction, category)}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition duration-150 hover:bg-[#5A4FE8] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Sparkles className="h-4 w-4" />
               Gerar template
@@ -163,7 +160,7 @@ export function AIAssistant({
             <button
               type="button"
               onClick={handleGenerateBackground}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]"
             >
               <ImagePlus className="h-4 w-4" />
               Gerar imagem de fundo
@@ -173,7 +170,7 @@ export function AIAssistant({
               type="button"
               disabled={isGenerating}
               onClick={() => onSuggestTexts(instruction)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--color-text-2)] transition duration-150 hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Type className="h-4 w-4" />
               Sugerir textos
@@ -181,20 +178,20 @@ export function AIAssistant({
           </div>
 
           {statusMessage ? (
-            <div className="rounded-[1.2rem] border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/72">
+            <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
               {statusMessage}
             </div>
           ) : null}
 
           {feedback ? (
-            <div className="rounded-[1.2rem] border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/72">
+            <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[#fbfaff] px-4 py-3 text-sm text-[var(--color-text-2)]">
               {feedback}
             </div>
           ) : null}
 
           {rationale ? (
-            <div className="rounded-[1.2rem] border border-emerald-400/18 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-50/84">
-              <strong className="text-emerald-50">Rationale da IA:</strong> {rationale}
+            <div className="rounded-[1.2rem] border border-emerald-200 bg-[var(--color-success-bg)] px-4 py-3 text-sm text-[#065f46]">
+              <strong>Rationale da IA:</strong> {rationale}
             </div>
           ) : null}
         </div>

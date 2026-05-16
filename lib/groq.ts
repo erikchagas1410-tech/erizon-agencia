@@ -1,22 +1,17 @@
 import "server-only";
 
-import Groq from "groq-sdk";
-
 import { AGENT_DEFINITIONS } from "@/lib/constants";
+import {
+  getGroqClient,
+  GROQ_TEXT_MODEL,
+  readGroqText
+} from "@/lib/groq-client";
 import { detectClientLanguage } from "@/lib/language";
 import { createSystemPrompt } from "@/lib/prompts";
-import { serverEnv } from "@/lib/env";
 
 import type { CampaignResults, ClientProfile } from "@/lib/types";
 
-const MODEL = "llama-3.3-70b-versatile";
 const MAX_TOKENS = 1024;
-
-function getGroqClient() {
-  return new Groq({
-    apiKey: serverEnv.groqApiKey
-  });
-}
 
 export async function runAgencyAgents(
   client: ClientProfile,
@@ -28,7 +23,7 @@ export async function runAgencyAgents(
   const entries = await Promise.all(
     AGENT_DEFINITIONS.map(async (agent) => {
       const completion = await groq.chat.completions.create({
-        model: MODEL,
+        model: GROQ_TEXT_MODEL,
         messages: [
           {
             role: "system",
@@ -46,8 +41,8 @@ export async function runAgencyAgents(
 
       return [
         agent.key,
-        completion.choices[0]?.message?.content?.trim() ||
-          "O agente não retornou conteúdo desta vez."
+        readGroqText(completion.choices[0]?.message?.content) ||
+          "O agente nao retornou conteudo desta vez."
       ] as const;
     })
   );
