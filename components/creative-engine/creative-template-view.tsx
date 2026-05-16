@@ -130,19 +130,103 @@ function BrandBadge({ creative }: { creative: CreativeJson }) {
   );
 }
 
+function GridOverlay({ creative }: { creative: CreativeJson }) {
+  const size = creative.format === "story" ? 64 : 56;
+  const columns = Math.ceil(CREATIVE_FORMAT_DIMENSIONS[creative.format].width / size);
+  const rows = Math.ceil(CREATIVE_FORMAT_DIMENSIONS[creative.format].height / size);
+  const lines: ReactNode[] = [];
+
+  for (let index = 1; index < columns; index += 1) {
+    lines.push(
+      <div
+        key={`v-${index}`}
+        style={{
+          position: "absolute",
+          left: index * size,
+          top: 0,
+          width: 1,
+          height: "100%",
+          backgroundColor: hexToRgba("#FFFFFF", 0.025)
+        }}
+      />
+    );
+  }
+
+  for (let index = 1; index < rows; index += 1) {
+    lines.push(
+      <div
+        key={`h-${index}`}
+        style={{
+          position: "absolute",
+          top: index * size,
+          left: 0,
+          height: 1,
+          width: "100%",
+          backgroundColor: hexToRgba("#FFFFFF", 0.025)
+        }}
+      />
+    );
+  }
+
+  return <>{lines}</>;
+}
+
 function DecorativeShapes({ creative }: { creative: CreativeJson }) {
   const accent = creative.brand.colors.accent || creative.brand.colors.secondary || "#38BDF8";
   const secondary = creative.brand.colors.secondary || creative.brand.colors.primary;
   const density = creative.visual.density;
+  const bgStyle = creative.visual.backgroundStyle;
+  const isStory = creative.format === "story";
 
-  const nodes: ReactNode[] = [
+  const nodes: ReactNode[] = [];
+
+  /*
+   * Do not use CSS backgroundImage here.
+   * Satori can treat unsupported background-image values as external URLs and
+   * throw "Invalid URL" during server-side PNG rendering. Every visual below is
+   * built with plain positioned divs, which Satori handles deterministically.
+   */
+  if (bgStyle === "grid") {
+    nodes.push(<GridOverlay key="grid" creative={creative} />);
+  }
+
+  if (bgStyle === "gradient" || bgStyle === "mesh" || bgStyle === "abstract") {
+    nodes.push(
+      <div
+        key="wash-top"
+        style={{
+          position: "absolute",
+          top: isStory ? -180 : -130,
+          left: isStory ? -120 : -90,
+          width: isStory ? 620 : 470,
+          height: isStory ? 620 : 470,
+          borderRadius: 999,
+          backgroundColor: hexToRgba(accent, bgStyle === "gradient" ? 0.14 : 0.1)
+        }}
+      />,
+      <div
+        key="wash-bottom"
+        style={{
+          position: "absolute",
+          right: isStory ? -210 : -150,
+          bottom: isStory ? -170 : -120,
+          width: isStory ? 720 : 520,
+          height: isStory ? 720 : 520,
+          borderRadius: 999,
+          backgroundColor: hexToRgba(secondary, bgStyle === "mesh" ? 0.14 : 0.1)
+        }}
+      />
+    );
+  }
+
+  nodes.push(
     <div
       key="accent-line"
       style={{
         position: "absolute",
-        top: creative.format === "story" ? 170 : 124,
-        left: creative.format === "story" ? 96 : 72,
-        width: creative.format === "story" ? 180 : 136,
+        top: isStory ? 170 : 124,
+        left: isStory ? 96 : 72,
+        width: isStory ? 180 : 136,
         height: 8,
         borderRadius: 999,
         backgroundColor: accent
@@ -152,10 +236,10 @@ function DecorativeShapes({ creative }: { creative: CreativeJson }) {
       key="orb-right"
       style={{
         position: "absolute",
-        top: creative.format === "story" ? 180 : 120,
-        right: creative.format === "story" ? 60 : 48,
-        width: creative.format === "story" ? 240 : 180,
-        height: creative.format === "story" ? 240 : 180,
+        top: isStory ? 180 : 120,
+        right: isStory ? 60 : 48,
+        width: isStory ? 240 : 180,
+        height: isStory ? 240 : 180,
         borderRadius: 999,
         backgroundColor: hexToRgba(accent, 0.18)
       }}
@@ -164,69 +248,16 @@ function DecorativeShapes({ creative }: { creative: CreativeJson }) {
       key="panel-bottom"
       style={{
         position: "absolute",
-        right: creative.format === "story" ? 86 : 68,
-        bottom: creative.format === "story" ? 150 : 96,
-        width: creative.format === "story" ? 260 : 200,
-        height: creative.format === "story" ? 168 : 132,
+        right: isStory ? 86 : 68,
+        bottom: isStory ? 150 : 96,
+        width: isStory ? 260 : 200,
+        height: isStory ? 168 : 132,
         borderRadius: 32,
         border: `1px solid ${hexToRgba("#FFFFFF", 0.14)}`,
         backgroundColor: hexToRgba("#FFFFFF", 0.06)
       }}
     />
-  ];
-
-  // Style variations based on visual.backgroundStyle
-  const bgStyle = creative.visual.backgroundStyle;
-
-  if (bgStyle === "grid") {
-    nodes.unshift(
-      <div
-        key="grid"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-          backgroundSize: "28px 28px, 28px 28px",
-          opacity: 0.7
-        }}
-      />
-    );
-  }
-
-  if (bgStyle === "mesh") {
-    nodes.unshift(
-      <div
-        key="mesh"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            `radial-gradient(circle at 10% 20%, ${hexToRgba(accent, 0.06)}, transparent 12%), radial-gradient(circle at 80% 70%, ${hexToRgba(secondary, 0.06)}, transparent 14%)`
-        }}
-      />
-    );
-  }
-
-  if (bgStyle === "gradient") {
-    nodes.unshift(
-      <div
-        key="gradient"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `linear-gradient(120deg, ${hexToRgba(accent, 0.08)}, transparent 40%)`,
-          opacity: 0.95
-        }}
-      />
-    );
-  }
-
-  if (bgStyle === "abstract") {
-    nodes.unshift(
-      <div key="abstract" style={{ position: "absolute", inset: 0 }} />
-    );
-  }
+  );
 
   if (density !== "low") {
     nodes.push(
@@ -234,10 +265,10 @@ function DecorativeShapes({ creative }: { creative: CreativeJson }) {
         key="orb-left"
         style={{
           position: "absolute",
-          left: creative.format === "story" ? -70 : -48,
-          bottom: creative.format === "story" ? 210 : 120,
-          width: creative.format === "story" ? 210 : 160,
-          height: creative.format === "story" ? 210 : 160,
+          left: isStory ? -70 : -48,
+          bottom: isStory ? 210 : 120,
+          width: isStory ? 210 : 160,
+          height: isStory ? 210 : 160,
           borderRadius: 999,
           backgroundColor: hexToRgba(secondary, 0.14)
         }}
@@ -251,10 +282,10 @@ function DecorativeShapes({ creative }: { creative: CreativeJson }) {
         key="accent-box"
         style={{
           position: "absolute",
-          top: creative.format === "story" ? 520 : 360,
-          right: creative.format === "story" ? 130 : 92,
-          width: creative.format === "story" ? 112 : 88,
-          height: creative.format === "story" ? 112 : 88,
+          top: isStory ? 520 : 360,
+          right: isStory ? 130 : 92,
+          width: isStory ? 112 : 88,
+          height: isStory ? 112 : 88,
           borderRadius: 24,
           backgroundColor: hexToRgba(accent, 0.22)
         }}
@@ -545,7 +576,7 @@ export function CreativeTemplateView({
   const dimensions = getCanvasSize(creative.format);
   const safePadding = getSafeArea(creative.format as any);
   const background = creative.brand.colors.background || creative.brand.colors.primary;
-  const fontFamily = creative.brand.fontFamily || "Inter";
+  const fontFamily = creative.brand.fontFamily || "Inter, system-ui, sans-serif";
 
   return (
     <div

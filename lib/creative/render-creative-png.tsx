@@ -1,9 +1,9 @@
 import "server-only";
 
 import { readFile } from "fs/promises";
+import { createRequire } from "module";
 import path from "path";
 
-import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 
 import { CreativeTemplateView } from "@/components/creative-engine/creative-template-view";
@@ -14,20 +14,51 @@ import {
 
 let cachedFontData: Buffer | null = null;
 
+/**
+ * Keep @resvg/resvg-js out of Next/Webpack's static dependency graph.
+ *
+ * The package loads a native .node binary. If it is imported statically,
+ * Next can try to parse that binary during SSR compilation and crash with:
+ * "Module parse failed: Unexpected character ... resvgjs.*.node".
+ */
+function loadResvg() {
+  const require = createRequire(import.meta.url);
+  const mod = require("@resvg/resvg-js") as typeof import("@resvg/resvg-js");
+  return mod.Resvg;
+}
+
 async function getRendererFonts() {
   if (!cachedFontData) {
-    const fontPath = path.join(
-      process.cwd(),
-      "node_modules",
-      "next",
-      "dist",
-      "compiled",
-      "@vercel",
-      "og",
-      "noto-sans-v27-latin-regular.ttf"
-    );
+    const candidatePaths = [
+      process.env.CREATIVE_FONT_PATH,
+      path.join(process.cwd(), "public", "fonts", "noto-sans-v27-latin-regular.ttf"),
+      path.join(process.cwd(), "node_modules", "@vercel", "og", "noto-sans-v27-latin-regular.ttf"),
+      path.join(
+        process.cwd(),
+        "node_modules",
+        "next",
+        "dist",
+        "compiled",
+        "@vercel",
+        "og",
+        "noto-sans-v27-latin-regular.ttf"
+      )
+    ].filter(Boolean) as string[];
 
-    cachedFontData = await readFile(fontPath);
+    for (const candidate of candidatePaths) {
+      try {
+        cachedFontData = await readFile(candidate);
+        break;
+      } catch {
+        // continue to next candidate path
+      }
+    }
+  }
+
+  if (!cachedFontData) {
+    throw new Error(
+      "Fonte de renderizacao nao encontrada. Defina CREATIVE_FONT_PATH apontando para um .ttf valido ou adicione public/fonts/noto-sans-v27-latin-regular.ttf."
+    );
   }
 
   return [
@@ -42,18 +73,68 @@ async function getRendererFonts() {
       data: cachedFontData,
       weight: 700 as const,
       style: "normal" as const
+    },
+    {
+      name: "Inter",
+      data: cachedFontData,
+      weight: 800 as const,
+      style: "normal" as const
     }
   ];
 }
 
+function normalizeCreativeForServerRender(creative: CreativeJson): CreativeJson {
+  return {
+    ...creative,
+    brand: {
+      ...creative.brand,
+      // Satori is strict with font families. The template uses Inter, so keep
+      // the render path deterministic even if the brand kit sends another font.
+      fontFamily: "Inter",
+      logoUrl: normalizeLogoUrl(creative.brand.logoUrl)
+    }
+  };
+}
+
+function normalizeLogoUrl(logoUrl?: string) {
+  if (!logoUrl) {
+    return undefined;
+  }
+
+  if (/^(https?:\/\/|data:image\/)/i.test(logoUrl)) {
+    return logoUrl;
+  }
+
+  // Defensive fallback. The schema should already reject relative logo URLs,
+  // but this avoids Satori's "Invalid URL" if legacy data reaches the renderer.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`;
+
+  if (!baseUrl) {
+    return undefined;
+  }
+
+  try {
+    return new URL(logoUrl, baseUrl).toString();
+  } catch {
+    return undefined;
+  }
+}
+
 export async function renderCreativePng(creative: CreativeJson) {
-  const dimensions = CREATIVE_FORMAT_DIMENSIONS[creative.format];
+  const normalizedCreative = normalizeCreativeForServerRender(creative);
+  const dimensions = CREATIVE_FORMAT_DIMENSIONS[normalizedCreative.format];
   const fonts = await getRendererFonts();
-  const svg = await satori(<CreativeTemplateView creative={creative} />, {
+
+  const svg = await satori(<CreativeTemplateView creative={normalizedCreative} />, {
     width: dimensions.width,
     height: dimensions.height,
     fonts
   });
+
+  const Resvg = loadResvg();
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: "width",

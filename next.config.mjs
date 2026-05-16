@@ -2,8 +2,13 @@
 const nextConfig = {
   webpack(config, { isServer }) {
     if (isServer) {
-      // Prevent bundling native @resvg binaries which break the webpack parser on Windows.
+      /*
+       * @resvg/resvg-js ships native .node binaries.
+       * Keep it external so Next/Webpack does not try to parse the binary
+       * while compiling API routes that import the creative renderer.
+       */
       config.externals = config.externals || [];
+
       if (Array.isArray(config.externals)) {
         config.externals.push("@resvg/resvg-js");
       }
