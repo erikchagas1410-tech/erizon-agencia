@@ -62,7 +62,6 @@ export function ImageGenerationPanel({
     () => (singleFormat ? [singleFormat] : IMAGE_FORMATS),
     [singleFormat]
   );
-
   const isReferenceMode = Boolean(singleFormat);
   const [images, setImages] = useState<ImageState[]>(() => buildInitialState(formatsToUse));
   const [round, setRound] = useState(0);
@@ -199,23 +198,23 @@ export function ImageGenerationPanel({
   const isAnyLoading = images.some((img) => img.loading);
 
   return (
-    <div className={cn("glass-panel space-y-6 rounded-[2rem] p-6", isReferenceMode && "p-5")}>
+    <div className={cn("glass-panel rounded-[2rem] p-6 space-y-6", isReferenceMode && "p-5")}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <span className="section-kicker">
             <Sparkles className="h-3.5 w-3.5" />
-            {isReferenceMode ? "Referencia visual" : "Pecas Visuais"}
+            Referencia Visual
           </span>
           <h2 className="mt-3 font-heading text-2xl font-semibold">
-            {isReferenceMode ? "Imagem de fundo por IA" : "Imagens geradas pela IA"}
+            Background gerado pela IA
           </h2>
           <p className="mt-2 text-sm text-white/56">
-            {isReferenceMode
-              ? "Use esta imagem como apoio visual dentro do editor. O texto final deve ser montado no canvas com tipografia real."
-              : "Cada prompt usa primeiro a direcao do Art Director e depois o contexto da marca para gerar a peca."}
+            Gera imagens de fundo atmosfericas baseadas na direcao do Art Director.
+            Use como asset no Editor de Canvas para montar a peca final com
+            tipografia, logo e copy reais.
             {hasGenerated && !isReferenceMode ? (
               <span className="ml-1 text-white/36">
-                Gere novamente para buscar novas interpretacoes do mesmo brief.
+                Gere novamente para explorar outras interpretacoes do mood visual.
               </span>
             ) : null}
           </p>
@@ -233,10 +232,10 @@ export function ImageGenerationPanel({
             : hasGenerated
               ? isReferenceMode
                 ? "Gerar nova referencia"
-                : "Gerar novamente"
+                : "Gerar novo background"
               : isReferenceMode
                 ? "Gerar referencia"
-                : "Gerar pecas"}
+                : "Gerar backgrounds"}
         </button>
       </div>
 
@@ -390,7 +389,7 @@ export function ImageGenerationPanel({
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2.5 text-xs font-semibold text-white/80 transition hover:bg-white/10"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  {composited[img.format] ? "Baixar com logo" : "Baixar"}
+                  {composited[img.format] ? "Baixar com logo" : "Baixar background"}
                 </a>
               ) : null}
             </div>
