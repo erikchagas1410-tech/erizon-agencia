@@ -82,6 +82,20 @@ body::before {
   backdrop-filter: blur(24px);
 }
 
+.panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.04)
+  );
+  backdrop-filter: blur(20px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 25px 80px rgba(0, 0, 0, 0.4);
+}
+
 .neon-border {
   position: relative;
 }
@@ -122,6 +136,18 @@ body::before {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .input-shell {
   width: 100%;
   border-radius: 1rem;
@@ -143,6 +169,40 @@ body::before {
 
 .input-shell::placeholder {
   color: rgba(255, 255, 255, 0.42);
+}
+
+.btn-ghost {
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.76);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.btn-primary {
+  border-radius: 0.95rem;
+  border: 1px solid transparent;
+  background: white;
+  color: black;
+  font-weight: 600;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255, 255, 255, 0.08);
 }
 
 .agent-copy {
