@@ -2,8 +2,8 @@
 /* eslint-disable @next/next/no-img-element */
 
 import type { ChangeEvent, FormEvent } from "react";
-import { startTransition, useEffect, useMemo, useState } from "react";
-import { Plus, Save, Trash2, Upload, Users, X } from "lucide-react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Save, ScanSearch, Trash2, Upload, Users, X } from "lucide-react";
 
 import { inferBrandTheme } from "@/lib/brand-theme";
 import { DEFAULT_CLIENT_FORM_VALUES } from "@/lib/constants";
@@ -90,7 +90,24 @@ const FIELD_META: Array<{
   }
 ];
 
+const AI_FILLABLE_FIELDS = new Set<keyof ClientFormValues>([
+  "name",
+  "voice_tone",
+  "personality",
+  "core_values",
+  "main_objective",
+  "post_sign_off",
+  "value_proposition",
+  "content_style",
+  "visual_aesthetic",
+  "reason_to_exist",
+  "content_pillars",
+  "brand_character",
+  "brand_colors"
+]);
+
 const MAX_LOGO_FILE_SIZE = 2 * 1024 * 1024;
+const MAX_ANALYZE_FILE_SIZE = 5 * 1024 * 1024;
 
 function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -187,6 +204,302 @@ function toFormValues(client: ClientProfile): ClientFormValues {
   };
 }
 
+type AnalyzeState =
+  | { status: "idle" }
+  | { status: "preview"; dataUrl: string; mimeType: string; fileName: string }
+  | { status: "analyzing" }
+  | { status: "done"; fields: Partial<ClientFormValues> };
+
+function BrandAnalyzerModal({
+  onApply,
+  onClose
+}: {
+  onApply: (fields: Partial<ClientFormValues>) => void;
+  onClose: () => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [state, setState] = useState<AnalyzeState>({ status: "idle" });
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleFileSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Envie uma imagem PNG, JPG, WEBP ou SVG.");
+      return;
+    }
+
+    if (file.size > MAX_ANALYZE_FILE_SIZE) {
+      setError("A imagem precisa ter até 5 MB.");
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setState({ status: "preview", dataUrl, mimeType: file.type, fileName: file.name });
+    } catch {
+      setError("Não foi possível carregar a imagem.");
+    }
+  }
+
+  async function handleAnalyze() {
+    if (state.status !== "preview") {
+      return;
+    }
+
+    const { dataUrl, mimeType } = state;
+    setState({ status: "analyzing" });
+    setError(null);
+
+    try {
+      const response = await fetch("/api/clients/analyze-brand-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl, mimeType })
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Falha ao analisar a imagem.");
+      }
+
+      setState({ status: "done", fields: payload.fields as Partial<ClientFormValues> });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro inesperado.");
+      setState({ status: "idle" });
+    }
+  }
+
+  function handleReset() {
+    setState({ status: "idle" });
+    setError(null);
+  }
+
+  const previewColors =
+    state.status === "done" && state.fields.brand_colors
+      ? parseBrandColors(state.fields.brand_colors)
+      : [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/72 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/12 bg-[#0d0d0f] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-white/8 px-6 py-5">
+          <div>
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+              <ScanSearch className="h-3.5 w-3.5" />
+              IA de Branding
+            </div>
+            <h2 className="mt-1 font-heading text-xl font-semibold">
+              Analisar imagem da marca
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-white/10 bg-white/5 p-2 text-white/60 transition hover:bg-white/10"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {state.status === "idle" && (
+            <div>
+              <p className="mb-5 text-sm leading-6 text-white/62">
+                Envie o logo, uma referência visual ou qualquer material da marca.
+                A IA vai analisar e preencher automaticamente os campos do cadastro.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full flex-col items-center justify-center gap-3 rounded-[1.5rem] border border-dashed border-white/14 bg-white/[0.03] py-10 transition hover:bg-white/[0.06]"
+              >
+                <div className="rounded-full border border-white/10 bg-white/6 p-4">
+                  <Upload className="h-6 w-6 text-white/50" />
+                </div>
+                <div className="text-sm text-white/60">
+                  Clique para selecionar uma imagem
+                </div>
+                <div className="text-xs text-white/36">PNG, JPG, WEBP ou SVG — até 5 MB</div>
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </div>
+          )}
+
+          {state.status === "preview" && (
+            <div>
+              <div className="mb-5 overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/30">
+                <img
+                  src={state.dataUrl}
+                  alt={state.fileName}
+                  className="max-h-56 w-full object-contain p-4"
+                />
+                <div className="border-t border-white/8 px-4 py-3 text-xs text-white/44">
+                  {state.fileName}
+                </div>
+              </div>
+
+              <p className="mb-5 text-sm text-white/60">
+                A IA vai analisar esta imagem e preencher todos os campos de
+                identidade da marca automaticamente. Você poderá revisar antes de
+                salvar.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/10"
+                >
+                  Trocar imagem
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                >
+                  <ScanSearch className="h-4 w-4" />
+                  Analisar com IA
+                </button>
+              </div>
+            </div>
+          )}
+
+          {state.status === "analyzing" && (
+            <div className="flex flex-col items-center gap-5 py-10 text-center">
+              <div className="relative">
+                <div className="h-14 w-14 animate-spin rounded-full border-2 border-white/10 border-t-white/70" />
+                <ScanSearch className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 text-white/50" />
+              </div>
+              <div>
+                <div className="font-heading text-lg font-semibold">Analisando a marca…</div>
+                <div className="mt-2 text-sm text-white/50">
+                  A IA está lendo cores, estética e identidade visual.
+                  <br />
+                  Isso leva alguns segundos.
+                </div>
+              </div>
+              <div className="mt-2 w-full max-w-xs space-y-2">
+                <div className="h-2 w-full animate-pulse rounded-full bg-white/8" />
+                <div className="h-2 w-4/5 animate-pulse rounded-full bg-white/6" />
+                <div className="h-2 w-3/5 animate-pulse rounded-full bg-white/5" />
+              </div>
+            </div>
+          )}
+
+          {state.status === "done" && (
+            <div>
+              <div className="mb-5 rounded-[1.5rem] border border-emerald-400/20 bg-emerald-500/8 px-4 py-3">
+                <div className="text-sm font-semibold text-emerald-300">
+                  Análise concluída
+                </div>
+                <div className="mt-1 text-sm text-white/60">
+                  Revise os campos abaixo e clique em{" "}
+                  <strong className="text-white">Aplicar ao formulário</strong> para
+                  preencher o cadastro. Você pode editar qualquer campo depois.
+                </div>
+              </div>
+
+              <div className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                {(
+                  [
+                    ["name", "Nome da Marca"],
+                    ["voice_tone", "Tom de Voz"],
+                    ["personality", "Personalidade"],
+                    ["visual_aesthetic", "Estética Visual"],
+                    ["value_proposition", "Proposta de Valor"],
+                    ["content_pillars", "Pilares de Conteúdo"],
+                    ["brand_colors", "Paleta de Cores"]
+                  ] as Array<[keyof ClientFormValues, string]>
+                ).map(([key, label]) => {
+                  const value = state.fields[key];
+                  if (!value) {
+                    return null;
+                  }
+
+                  return (
+                    <div key={key} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/36">
+                        {label}
+                      </div>
+                      <div className="text-sm leading-6 text-white/80">
+                        {String(value)}
+                      </div>
+                      {key === "brand_colors" && previewColors.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {previewColors.map((color, i) => (
+                            <div
+                              key={`${color}-${i}`}
+                              className="flex items-center gap-2"
+                            >
+                              <div
+                                className="h-7 w-7 rounded-xl border border-white/10"
+                                style={{ backgroundColor: color }}
+                              />
+                              <span className="text-xs text-white/44">{color}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-white/70 transition hover:bg-white/10"
+                >
+                  Nova imagem
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onApply(state.fields);
+                    onClose();
+                  }}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
+                >
+                  Aplicar ao formulário
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ClientManagerWorkspace({
   initialClients
 }: {
@@ -199,6 +512,8 @@ export function ClientManagerWorkspace({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [showAnalyzer, setShowAnalyzer] = useState(false);
+  const [aiFilledKeys, setAiFilledKeys] = useState<Set<keyof ClientFormValues>>(new Set());
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) || null,
@@ -208,8 +523,10 @@ export function ClientManagerWorkspace({
   useEffect(() => {
     if (selectedClient) {
       setFormValues(toFormValues(selectedClient));
+      setAiFilledKeys(new Set());
     } else {
       setFormValues(DEFAULT_CLIENT_FORM_VALUES);
+      setAiFilledKeys(new Set());
     }
   }, [selectedClient]);
 
@@ -286,7 +603,7 @@ export function ClientManagerWorkspace({
     }
 
     if (file.size > MAX_LOGO_FILE_SIZE) {
-      setFeedback("A logo precisa ter at\u00e9 2 MB.");
+      setFeedback("A logo precisa ter até 2 MB.");
       return;
     }
 
@@ -297,13 +614,9 @@ export function ClientManagerWorkspace({
         ...current,
         logo_url: dataUrl
       }));
-      setFeedback("Logo carregada. Salve o cliente para usar a marca nas pe\u00e7as.");
+      setFeedback("Logo carregada. Salve o cliente para usar a marca nas peças.");
     } catch (error) {
-      setFeedback(
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel carregar a logo."
-      );
+      setFeedback(error instanceof Error ? error.message : "Falha ao carregar a logo.");
     }
   }
 
@@ -312,7 +625,29 @@ export function ClientManagerWorkspace({
       ...current,
       logo_url: ""
     }));
-    setFeedback("Logo removida do formul\u00e1rio. Salve para confirmar a altera\u00e7\u00e3o.");
+    setFeedback("Logo removida do formulário. Salve para confirmar a alteração.");
+  }
+
+  function handleApplyAiFields(fields: Partial<ClientFormValues>) {
+    setFormValues((current) => {
+      const next = { ...current };
+      const filled = new Set<keyof ClientFormValues>();
+
+      for (const key of AI_FILLABLE_FIELDS) {
+        const value = fields[key];
+        if (typeof value === "string" && value.trim()) {
+          (next as Record<string, unknown>)[key] = value.trim();
+          filled.add(key);
+        }
+      }
+
+      setAiFilledKeys(filled);
+      return next;
+    });
+
+    setFeedback(
+      "Campos preenchidos pela IA. Revise tudo antes de salvar — a IA pode errar detalhes."
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -361,6 +696,7 @@ export function ClientManagerWorkspace({
         setSelectedClientId(result.client.id);
       });
 
+      setAiFilledKeys(new Set());
       setFeedback(
         selectedClient
           ? "Cliente atualizado com sucesso."
@@ -424,299 +760,240 @@ export function ClientManagerWorkspace({
   function handleNewClient() {
     setSelectedClientId("");
     setFormValues(DEFAULT_CLIENT_FORM_VALUES);
+    setAiFilledKeys(new Set());
     setFeedback(null);
   }
 
+  const WIDE_FIELDS = new Set([
+    "core_values",
+    "main_objective",
+    "value_proposition",
+    "reason_to_exist",
+    "content_pillars",
+    "brand_character"
+  ]);
+
   return (
-    <div className="space-y-6">
-      <section className="grid gap-6 2xl:grid-cols-[1.12fr,0.88fr]">
-        <div className="glass-panel neon-border rounded-[2rem] p-6 sm:p-7">
-          <span className="section-kicker">
-            <Users className="h-3.5 w-3.5" />
-            Biblioteca de Marca
-          </span>
+    <div className="space-y-8">
+      {showAnalyzer && (
+        <BrandAnalyzerModal
+          onApply={handleApplyAiFields}
+          onClose={() => setShowAnalyzer(false)}
+        />
+      )}
 
-          <div className="mt-5">
-            <h1 className="max-w-3xl font-heading text-3xl font-semibold leading-tight sm:text-[2.7rem]">
-              Organize clientes, identidade visual e briefing completo em uma unica
-              base facil de consultar.
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm text-white/66 sm:text-base">
-              A pagina foi separada em dois lados claros: biblioteca e preview da
-              marca de um lado, formulario e edicao do outro.
-            </p>
-          </div>
+      <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
+        <div className="grid gap-8 xl:grid-cols-[1fr,1.4fr]">
+          <div>
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="section-kicker">
+                  <Users className="h-3.5 w-3.5" />
+                  Clientes
+                </span>
+                <h1 className="mt-4 font-heading text-3xl font-semibold">
+                  Cadastro completo de clientes
+                </h1>
+                <p className="mt-3 text-sm text-white/64">
+                  Cadastre uma vez e use a identidade completa em todas as próximas
+                  produções.
+                </p>
+              </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
-                Clientes
-              </div>
-              <div className="mt-3 font-heading text-2xl font-semibold text-white">
-                {clients.length}
-              </div>
-              <div className="mt-1 text-sm text-white/52">marcas salvas na conta</div>
-            </div>
-            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
-                Em foco
-              </div>
-              <div className="mt-3 font-heading text-2xl font-semibold text-white">
-                {selectedClient ? "Editando" : "Novo"}
-              </div>
-              <div className="mt-1 text-sm text-white/52">
-                {selectedClient ? selectedClient.name : "cadastro em branco"}
-              </div>
-            </div>
-            <div className="rounded-[1.45rem] border border-white/8 bg-white/[0.03] p-4">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-white/38">
-                Visual
-              </div>
-              <div className="mt-3 font-heading text-2xl font-semibold text-white">
-                {previewTheme ? "Ativo" : "Aguardando"}
-              </div>
-              <div className="mt-1 text-sm text-white/52">
-                preview da identidade em tempo real
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel rounded-[2rem] p-6">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/36">
-            Leitura rapida
-          </div>
-          <div className="mt-4 grid gap-3">
-            {[
-              "Escolha uma marca na biblioteca para revisar ou atualizar o briefing.",
-              "Veja as cores e a logo reagirem no preview antes de salvar.",
-              "Mantenha a identidade completa para o sistema inteiro trabalhar com menos friccao."
-            ].map((item, index) => (
-              <div
-                key={item}
-                className="rounded-[1.35rem] border border-white/8 bg-white/[0.03] px-4 py-4"
+              <button
+                type="button"
+                onClick={handleNewClient}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
               >
-                <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/40">
-                  Etapa {index + 1}
+                <Plus className="h-4 w-4" />
+                Novo
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {clients.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-sm text-white/54">
+                  Nenhum cliente cadastrado ainda. Comece preenchendo o formulário ao
+                  lado.
                 </div>
-                <div className="text-sm leading-6 text-white/72">{item}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[0.88fr,1.12fr]">
-        <section className="space-y-6 xl:sticky xl:top-8 xl:self-start">
-        <div className="glass-panel neon-border rounded-[2rem] p-6">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <span className="section-kicker">
-                <Users className="h-3.5 w-3.5" />
-                Biblioteca de Marca
-              </span>
-              <h1 className="mt-4 font-heading text-3xl font-semibold">
-                Cadastro completo de clientes
-              </h1>
-              <p className="mt-3 text-sm text-white/64">
-                Cadastre uma vez e use a identidade completa em todas as próximas
-                produções.
-              </p>
+              {clients.map((client) => {
+                const active = client.id === selectedClientId;
+
+                return (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onClick={() => setSelectedClientId(client.id)}
+                    className={`w-full rounded-3xl border px-4 py-4 text-left transition ${
+                      active
+                        ? "border-white/18 bg-white/10"
+                        : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <div className="font-semibold text-white">{client.name}</div>
+                    <div className="mt-2 line-clamp-2 text-sm text-white/62">
+                      {client.voice_tone}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {client.content_pillars.slice(0, 3).map((pillar) => (
+                        <span
+                          key={pillar}
+                          className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] text-white/68"
+                        >
+                          {pillar}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-
-            <button
-              type="button"
-              onClick={handleNewClient}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-black transition hover:translate-y-[-1px]"
-            >
-              <Plus className="h-4 w-4" />
-              Novo
-            </button>
           </div>
 
-          <div className="space-y-3">
-            {clients.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-sm text-white/54">
-                Nenhum cliente cadastrado ainda. Comece preenchendo o formulário ao
-                lado.
+          {previewTheme ? (
+            <div className="glass-panel rounded-[1.75rem] p-5">
+              <div className="mb-4">
+                <h2 className="font-heading text-xl font-semibold">Preview visual da marca</h2>
+                <p className="mt-2 text-sm text-white/56">
+                  Estimativa do tema que o sistema vai usar como referência para o Art
+                  Director.
+                </p>
               </div>
-            ) : null}
 
-            {clients.map((client) => {
-              const active = client.id === selectedClientId;
-
-              return (
-                <button
-                  key={client.id}
-                  type="button"
-                  onClick={() => setSelectedClientId(client.id)}
-                  className={`w-full rounded-3xl border px-4 py-4 text-left transition ${
-                    active
-                      ? "border-white/18 bg-white/10"
-                      : "border-white/8 bg-white/[0.03] hover:bg-white/[0.06]"
-                  }`}
-                >
-                  <div className="font-semibold text-white">{client.name}</div>
-                  <div className="mt-2 line-clamp-2 text-sm text-white/62">
-                    {client.voice_tone}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {client.content_pillars.slice(0, 3).map((pillar) => (
-                      <span
-                        key={pillar}
-                        className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[11px] text-white/68"
-                      >
-                        {pillar}
-                      </span>
-                    ))}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {previewTheme ? (
-          <div className="glass-panel rounded-[1.75rem] p-5">
-            <div className="mb-4">
-              <h2 className="font-heading text-xl font-semibold">Preview visual da marca</h2>
-              <p className="mt-2 text-sm text-white/56">
-                Estimativa do tema que o sistema vai usar como referência para o Art
-                Director.
-              </p>
-            </div>
-
-            <div
-              className="relative overflow-hidden rounded-[1.6rem] border p-5"
-              style={{
-                borderColor: `${previewTheme.accent}55`,
-                background: `linear-gradient(135deg, ${previewTheme.primary} 0%, ${previewTheme.secondary} 58%, ${previewTheme.accent} 100%)`
-              }}
-            >
               <div
-                className="pointer-events-none absolute inset-0"
+                className="relative overflow-hidden rounded-[1.6rem] border p-5"
                 style={{
-                  background:
-                    previewTextColor === "#050505"
-                      ? "linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))"
-                      : "linear-gradient(180deg, rgba(5,5,5,0.04), rgba(5,5,5,0.28))"
+                  borderColor: `${previewTheme.accent}55`,
+                  background: `linear-gradient(135deg, ${previewTheme.primary} 0%, ${previewTheme.secondary} 58%, ${previewTheme.accent} 100%)`
                 }}
-              />
-
-              <div className="relative flex items-start justify-between gap-4">
-                <div className="max-w-[18rem]">
-                  <div
-                    className="text-[10px] uppercase tracking-[0.24em]"
-                    style={{ color: previewMutedTextColor }}
-                  >
-                    identidade ativa
-                  </div>
-                  <div
-                    className="mt-3 text-2xl font-semibold leading-tight"
-                    style={{ color: previewTextColor }}
-                  >
-                    {formValues.name}
-                  </div>
-                  <div className="mt-3 text-sm leading-6" style={{ color: previewMutedTextColor }}>
-                    {formValues.visual_aesthetic || previewTheme.mood}
-                  </div>
-                </div>
-
+              >
                 <div
-                  className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border backdrop-blur-sm"
+                  className="pointer-events-none absolute inset-0"
                   style={{
-                    borderColor:
+                    background:
                       previewTextColor === "#050505"
-                        ? "rgba(5, 5, 5, 0.1)"
-                        : "rgba(255, 255, 255, 0.22)",
-                    backgroundColor:
-                      previewTextColor === "#050505"
-                        ? "rgba(255, 255, 255, 0.74)"
-                        : "rgba(255, 255, 255, 0.16)"
+                        ? "linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04))"
+                        : "linear-gradient(180deg, rgba(5,5,5,0.04), rgba(5,5,5,0.28))"
                   }}
-                >
-                  {formValues.logo_url ? (
-                    <img
-                      src={formValues.logo_url}
-                      alt={`Logo de ${formValues.name}`}
-                      className="h-full w-full object-contain p-3"
-                    />
-                  ) : (
-                    <span
-                      className="text-2xl font-semibold"
+                />
+
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className="max-w-[18rem]">
+                    <div
+                      className="text-[10px] uppercase tracking-[0.24em]"
+                      style={{ color: previewMutedTextColor }}
+                    >
+                      identidade ativa
+                    </div>
+                    <div
+                      className="mt-3 text-2xl font-semibold leading-tight"
                       style={{ color: previewTextColor }}
                     >
-                      {getInitials(formValues.name) || "MK"}
-                    </span>
-                  )}
-                </div>
-              </div>
+                      {formValues.name}
+                    </div>
+                    <div className="mt-3 text-sm leading-6" style={{ color: previewMutedTextColor }}>
+                      {formValues.visual_aesthetic || previewTheme.mood}
+                    </div>
+                  </div>
 
-              <div className="relative mt-6 grid gap-3 sm:grid-cols-[1.15fr,0.85fr]">
-                <div
-                  className="rounded-[1.35rem] border p-4 backdrop-blur-sm"
-                  style={{
-                    borderColor:
-                      previewTextColor === "#050505"
-                        ? "rgba(5, 5, 5, 0.1)"
-                        : "rgba(255, 255, 255, 0.16)",
-                    backgroundColor:
-                      previewTextColor === "#050505"
-                        ? "rgba(255, 255, 255, 0.3)"
-                        : "rgba(5, 5, 5, 0.2)"
-                  }}
-                >
                   <div
-                    className="text-[10px] uppercase tracking-[0.2em]"
-                    style={{ color: previewMutedTextColor }}
+                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.35rem] border backdrop-blur-sm"
+                    style={{
+                      borderColor:
+                        previewTextColor === "#050505"
+                          ? "rgba(5, 5, 5, 0.1)"
+                          : "rgba(255, 255, 255, 0.22)",
+                      backgroundColor:
+                        previewTextColor === "#050505"
+                          ? "rgba(255, 255, 255, 0.74)"
+                          : "rgba(255, 255, 255, 0.16)"
+                    }}
                   >
-                    atmosfera
-                  </div>
-                  <div className="mt-3 text-sm leading-6" style={{ color: previewTextColor }}>
-                    {previewTheme.mood}
-                  </div>
-                  <div className="mt-4 flex items-center gap-3">
-                    <div
-                      className="h-3 w-16 rounded-full"
-                      style={{ backgroundColor: previewTheme.primary }}
-                    />
-                    <div
-                      className="h-3 w-10 rounded-full"
-                      style={{ backgroundColor: previewTheme.accent }}
-                    />
-                    <div
-                      className="h-3 w-6 rounded-full"
-                      style={{ backgroundColor: previewTheme.secondary }}
-                    />
+                    {formValues.logo_url ? (
+                      <img
+                        src={formValues.logo_url}
+                        alt={`Logo de ${formValues.name}`}
+                        className="h-full w-full object-contain p-3"
+                      />
+                    ) : (
+                      <span
+                        className="text-2xl font-semibold"
+                        style={{ color: previewTextColor }}
+                      >
+                        {getInitials(formValues.name) || "MK"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  {previewTheme.palette.map((color, index) => (
-                    <div key={`${color}-${index}`} className="space-y-2">
+                <div className="relative mt-6 grid gap-3 sm:grid-cols-[1.15fr,0.85fr]">
+                  <div
+                    className="rounded-[1.35rem] border p-4 backdrop-blur-sm"
+                    style={{
+                      borderColor:
+                        previewTextColor === "#050505"
+                          ? "rgba(5, 5, 5, 0.1)"
+                          : "rgba(255, 255, 255, 0.16)",
+                      backgroundColor:
+                        previewTextColor === "#050505"
+                          ? "rgba(255, 255, 255, 0.3)"
+                          : "rgba(5, 5, 5, 0.2)"
+                    }}
+                  >
+                    <div
+                      className="text-[10px] uppercase tracking-[0.2em]"
+                      style={{ color: previewMutedTextColor }}
+                    >
+                      atmosfera
+                    </div>
+                    <div className="mt-3 text-sm leading-6" style={{ color: previewTextColor }}>
+                      {previewTheme.mood}
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
                       <div
-                        className="h-12 w-12 rounded-2xl border"
-                        style={{
-                          backgroundColor: color,
-                          borderColor:
-                            previewTextColor === "#050505"
-                              ? "rgba(5, 5, 5, 0.08)"
-                              : "rgba(255, 255, 255, 0.18)"
-                        }}
+                        className="h-3 w-16 rounded-full"
+                        style={{ backgroundColor: previewTheme.primary }}
                       />
                       <div
-                        className="text-[10px] uppercase tracking-[0.14em]"
-                        style={{ color: previewMutedTextColor }}
-                      >
-                        {color}
-                      </div>
+                        className="h-3 w-10 rounded-full"
+                        style={{ backgroundColor: previewTheme.accent }}
+                      />
+                      <div
+                        className="h-3 w-6 rounded-full"
+                        style={{ backgroundColor: previewTheme.secondary }}
+                      />
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    {previewTheme.palette.map((color, index) => (
+                      <div key={`${color}-${index}`} className="space-y-2">
+                        <div
+                          className="h-12 w-12 rounded-2xl border"
+                          style={{
+                            backgroundColor: color,
+                            borderColor:
+                              previewTextColor === "#050505"
+                                ? "rgba(5, 5, 5, 0.08)"
+                                : "rgba(255, 255, 255, 0.18)"
+                          }}
+                        />
+                        <div
+                          className="text-[10px] uppercase tracking-[0.14em]"
+                          style={{ color: previewMutedTextColor }}
+                        >
+                          {color}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </section>
 
       <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
@@ -732,6 +1009,15 @@ export function ClientManagerWorkspace({
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => setShowAnalyzer(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/12 px-4 py-3 text-sm font-semibold text-violet-200 transition hover:bg-violet-500/20"
+            >
+              <ScanSearch className="h-4 w-4" />
+              Preencher com imagem
+            </button>
+
             {selectedClient ? (
               <button
                 type="button"
@@ -746,6 +1032,16 @@ export function ClientManagerWorkspace({
           </div>
         </div>
 
+        {aiFilledKeys.size > 0 && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-violet-400/20 bg-violet-500/8 px-4 py-3">
+            <ScanSearch className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" />
+            <div className="text-sm text-violet-200">
+              <strong>{aiFilledKeys.size} campos</strong> foram preenchidos pela IA.
+              Os campos destacados em roxo foram gerados automaticamente — revise antes de salvar.
+            </div>
+          </div>
+        )}
+
         {feedback ? (
           <div className="mb-6 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/80">
             {feedback}
@@ -757,47 +1053,65 @@ export function ClientManagerWorkspace({
             {FIELD_META.map((field) => {
               const isTextarea = field.type === "textarea";
               const value = formValues[field.key];
+              const isAiFilled = aiFilledKeys.has(field.key);
 
               return (
                 <label
                   key={field.key}
-                  className={`block space-y-2 ${
-                    field.key === "core_values" ||
-                    field.key === "main_objective" ||
-                    field.key === "value_proposition" ||
-                    field.key === "reason_to_exist" ||
-                    field.key === "content_pillars" ||
-                    field.key === "brand_character"
-                      ? "sm:col-span-2"
-                      : ""
-                  }`}
+                  className={`block space-y-2 ${WIDE_FIELDS.has(field.key) ? "sm:col-span-2" : ""}`}
                 >
-                  <span className="text-sm font-medium text-white/84">{field.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white/84">{field.label}</span>
+                    {isAiFilled && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                        <ScanSearch className="h-2.5 w-2.5" />
+                        IA
+                      </span>
+                    )}
+                  </div>
                   {isTextarea ? (
                     <textarea
                       rows={field.key === "brand_character" ? 5 : 4}
                       value={value}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setFormValues((current) => ({
                           ...current,
                           [field.key]: event.target.value
-                        }))
-                      }
+                        }));
+                        if (isAiFilled) {
+                          setAiFilledKeys((current) => {
+                            const next = new Set(current);
+                            next.delete(field.key);
+                            return next;
+                          });
+                        }
+                      }}
                       placeholder={field.placeholder}
-                      className="input-shell resize-none px-4 py-4 text-sm"
+                      className={`input-shell resize-none px-4 py-4 text-sm ${
+                        isAiFilled ? "ring-1 ring-violet-500/40" : ""
+                      }`}
                     />
                   ) : (
                     <input
                       type="text"
                       value={value}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         setFormValues((current) => ({
                           ...current,
                           [field.key]: event.target.value
-                        }))
-                      }
+                        }));
+                        if (isAiFilled) {
+                          setAiFilledKeys((current) => {
+                            const next = new Set(current);
+                            next.delete(field.key);
+                            return next;
+                          });
+                        }
+                      }}
                       placeholder={field.placeholder}
-                      className="input-shell px-4 py-4 text-sm"
+                      className={`input-shell px-4 py-4 text-sm ${
+                        isAiFilled ? "ring-1 ring-violet-500/40" : ""
+                      }`}
                     />
                   )}
                 </label>
@@ -831,8 +1145,8 @@ export function ClientManagerWorkspace({
                         Upload direto para a identidade da marca
                       </div>
                       <div className="mt-1 text-sm text-white/58">
-                        Envie PNG, JPG, WEBP ou SVG com atÃ© 2 MB. A logo passa a
-                        aparecer no preview imediatamente e pode ser usada nas peÃ§as
+                        Envie PNG, JPG, WEBP ou SVG com até 2 MB. A logo passa a
+                        aparecer no preview imediatamente e pode ser usada nas peças
                         geradas.
                       </div>
                     </div>
@@ -866,20 +1180,37 @@ export function ClientManagerWorkspace({
             </div>
 
             <label className="block space-y-2 sm:col-span-2">
-              <span className="text-sm font-medium text-white/84">
-                Paleta de Cores da Marca
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white/84">
+                  Paleta de Cores da Marca
+                </span>
+                {aiFilledKeys.has("brand_colors") && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/30 bg-violet-500/12 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-300">
+                    <ScanSearch className="h-2.5 w-2.5" />
+                    IA
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 value={formValues.brand_colors}
-                onChange={(event) =>
+                onChange={(event) => {
                   setFormValues((current) => ({
                     ...current,
                     brand_colors: event.target.value
-                  }))
-                }
+                  }));
+                  if (aiFilledKeys.has("brand_colors")) {
+                    setAiFilledKeys((current) => {
+                      const next = new Set(current);
+                      next.delete("brand_colors");
+                      return next;
+                    });
+                  }
+                }}
                 placeholder="Ex.: #E8D2B5, #B7945C, #1B1B1B"
-                className="input-shell px-4 py-4 text-sm"
+                className={`input-shell px-4 py-4 text-sm ${
+                  aiFilledKeys.has("brand_colors") ? "ring-1 ring-violet-500/40" : ""
+                }`}
               />
 
               {brandColorSwatches.length > 0 ? (
@@ -887,7 +1218,7 @@ export function ClientManagerWorkspace({
                   {brandColorSwatches.map((color, index) => (
                     <div
                       key={`${color}-${index}`}
-                      className="h-10 w-10 rounded-xl border border-white/10 flex-shrink-0"
+                      className="h-10 w-10 flex-shrink-0 rounded-xl border border-white/10"
                       style={{ backgroundColor: color }}
                       title={color}
                     />
@@ -910,8 +1241,7 @@ export function ClientManagerWorkspace({
                 : "Criar cliente"}
           </button>
         </form>
-        </section>
-      </div>
+      </section>
     </div>
   );
 }
