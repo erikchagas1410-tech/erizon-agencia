@@ -13,6 +13,7 @@ import {
 } from "@/lib/creative/schema";
 
 let cachedFontData: Buffer | null = null;
+const moduleRequire = createRequire(import.meta.url);
 
 /**
  * Keep @resvg/resvg-js out of Next/Webpack's static dependency graph.
@@ -22,28 +23,47 @@ let cachedFontData: Buffer | null = null;
  * "Module parse failed: Unexpected character ... resvgjs.*.node".
  */
 function loadResvg() {
-  const require = createRequire(import.meta.url);
-  const mod = require("@resvg/resvg-js") as typeof import("@resvg/resvg-js");
+  const mod = moduleRequire("@resvg/resvg-js") as typeof import("@resvg/resvg-js");
   return mod.Resvg;
 }
 
-async function getRendererFonts() {
-  if (!cachedFontData) {
-    const candidatePaths = [
-      process.env.CREATIVE_FONT_PATH,
-      path.join(process.cwd(), "public", "fonts", "noto-sans-v27-latin-regular.ttf"),
-      path.join(process.cwd(), "node_modules", "@vercel", "og", "noto-sans-v27-latin-regular.ttf"),
-      path.join(
-        process.cwd(),
-        "node_modules",
-        "next",
+function resolveBundledOgFontPath() {
+  let nextPackageJson: string | undefined;
+
+  try {
+    nextPackageJson = moduleRequire.resolve("next/package.json");
+  } catch {
+    nextPackageJson = undefined;
+  }
+
+  return nextPackageJson
+    ? path.join(
+        path.dirname(nextPackageJson),
         "dist",
         "compiled",
         "@vercel",
         "og",
         "noto-sans-v27-latin-regular.ttf"
       )
-    ].filter(Boolean) as string[];
+    : undefined;
+}
+
+function getRendererFontCandidates() {
+  return Array.from(
+    new Set(
+      [
+        process.env.CREATIVE_FONT_PATH,
+        path.join(process.cwd(), "public", "fonts", "noto-sans-v27-latin-regular.ttf"),
+        path.join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "noto-sans-v27-latin-regular.ttf"),
+        resolveBundledOgFontPath()
+      ].filter(Boolean) as string[]
+    )
+  );
+}
+
+async function getRendererFonts() {
+  if (!cachedFontData) {
+    const candidatePaths = getRendererFontCandidates();
 
     for (const candidate of candidatePaths) {
       try {
@@ -57,7 +77,7 @@ async function getRendererFonts() {
 
   if (!cachedFontData) {
     throw new Error(
-      "Fonte de renderizacao nao encontrada. Defina CREATIVE_FONT_PATH apontando para um .ttf valido ou adicione public/fonts/noto-sans-v27-latin-regular.ttf."
+      `Fonte de renderizacao nao encontrada. Defina CREATIVE_FONT_PATH apontando para um .ttf valido ou adicione public/fonts/noto-sans-v27-latin-regular.ttf. Caminhos tentados: ${getRendererFontCandidates().join(", ")}`
     );
   }
 
