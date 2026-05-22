@@ -1,9 +1,10 @@
 import path from "path";
+import { getStorageRoot } from "@/lib/creative/storage-root";
 import { mkdir, readdir, readFile, stat, writeFile } from "fs/promises";
 import { randomUUID } from "crypto";
 import type { CreativeJson } from "@/lib/creative/schema";
 
-const ASSETS_ROOT = path.join(process.cwd(), ".generated", "creative_assets");
+const ASSETS_ROOT = getStorageRoot("creative_assets");
 
 function getAssetPath(id: string) {
   return path.join(ASSETS_ROOT, `${id}.json`);

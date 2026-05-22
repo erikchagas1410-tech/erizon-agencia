@@ -5,8 +5,9 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 import type { CreativeJson } from "@/lib/creative/schema";
+import { getStorageRoot } from "@/lib/creative/storage-root";
 
-const STORAGE_ROOT = path.join(process.cwd(), ".generated", "creative");
+const STORAGE_ROOT = getStorageRoot("creative");
 
 function getImagePath(id: string) {
   return path.join(STORAGE_ROOT, `${id}.png`);

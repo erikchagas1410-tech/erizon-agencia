@@ -1,7 +1,8 @@
 import path from "path";
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
+import { getStorageRoot } from "@/lib/creative/storage-root";
 
-const DNA_ROOT = path.join(process.cwd(), ".generated", "creative_dna");
+const DNA_ROOT = getStorageRoot("creative_dna");
 
 async function ensure() {
   await mkdir(DNA_ROOT, { recursive: true });
