@@ -14,6 +14,7 @@ import {
   type CreativeJson
 } from "@/lib/creative/schema";
 
+const RENDERER_FONT_FILE = "noto-sans-v27-latin-regular.ttf";
 let cachedFontData: Buffer | null = null;
 const moduleRequire = createRequire(import.meta.url);
 
@@ -22,11 +23,7 @@ function expandRenderableNode(node: ReactNode): ReactNode[] {
     return node.flatMap((child) => expandRenderableNode(child));
   }
 
-  if (
-    node === null ||
-    node === undefined ||
-    typeof node === "boolean"
-  ) {
+  if (node === null || node === undefined || typeof node === "boolean") {
     return [];
   }
 
@@ -101,7 +98,11 @@ function assertSatoriCompatibleTree(node: ReactNode, trail: string[] = []) {
     }
 
     children.forEach((child, index) => {
-      assertSatoriCompatibleTree(child, [...trail, `${elementName}[${expandedIndex}]`, `${elementName}:${index}`]);
+      assertSatoriCompatibleTree(child, [
+        ...trail,
+        `${elementName}[${expandedIndex}]`,
+        `${elementName}:${index}`
+      ]);
     });
   });
 }
@@ -220,57 +221,96 @@ function loadResvg() {
   return mod.Resvg;
 }
 
-function resolveBundledOgFontPath() {
-  let nextPackageJson: string | undefined;
-
-  try {
-    nextPackageJson = moduleRequire.resolve(["next", "package.json"].join("/"));
-  } catch {
-    nextPackageJson = undefined;
-  }
-
-  return nextPackageJson
-    ? path.join(
-        path.dirname(nextPackageJson),
-        "dist",
-        "compiled",
-        "@vercel",
-        "og",
-        "noto-sans-v27-latin-regular.ttf"
-      )
-    : undefined;
+function normalizeBaseUrl(baseUrl: string) {
+  return baseUrl.replace(/\/+$/, "");
 }
 
-function getRendererFontCandidates() {
+function getRendererFontPathCandidates() {
   return Array.from(
     new Set(
       [
         process.env.CREATIVE_FONT_PATH,
-        path.join(process.cwd(), "public", "fonts", "noto-sans-v27-latin-regular.ttf"),
-        path.join(process.cwd(), "node_modules", "next", "dist", "compiled", "@vercel", "og", "noto-sans-v27-latin-regular.ttf"),
-        resolveBundledOgFontPath()
+        path.join(process.cwd(), "public", "fonts", RENDERER_FONT_FILE),
+        path.join(
+          process.cwd(),
+          "node_modules",
+          "next",
+          "dist",
+          "compiled",
+          "@vercel",
+          "og",
+          RENDERER_FONT_FILE
+        )
       ].filter(Boolean) as string[]
     )
   );
 }
 
-async function getRendererFonts() {
-  if (!cachedFontData) {
-    const candidatePaths = getRendererFontCandidates();
+function getRendererFontUrlCandidates() {
+  const baseUrls = [
+    process.env.CREATIVE_FONT_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+    process.env.APP_URL,
+    process.env.NEXT_PUBLIC_APP_URL
+  ].filter(Boolean) as string[];
 
-    for (const candidate of candidatePaths) {
-      try {
-        cachedFontData = await readFile(candidate);
-        break;
-      } catch {
-        // continue to next candidate path
-      }
+  return Array.from(
+    new Set(
+      baseUrls.map((baseUrl) => {
+        if (
+          /^https?:\/\//i.test(baseUrl) &&
+          baseUrl.endsWith(`/${RENDERER_FONT_FILE}`)
+        ) {
+          return normalizeBaseUrl(baseUrl);
+        }
+
+        return `${normalizeBaseUrl(baseUrl)}/fonts/${RENDERER_FONT_FILE}`;
+      })
+    )
+  );
+}
+
+async function tryLoadFontData() {
+  for (const candidate of getRendererFontPathCandidates()) {
+    try {
+      return await readFile(candidate);
+    } catch {
+      // continue to next candidate path
     }
   }
 
+  for (const candidate of getRendererFontUrlCandidates()) {
+    try {
+      const response = await fetch(candidate, {
+        cache: "force-cache"
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      return Buffer.from(await response.arrayBuffer());
+    } catch {
+      // continue to next candidate URL
+    }
+  }
+
+  return null;
+}
+
+async function getRendererFonts() {
   if (!cachedFontData) {
+    cachedFontData = await tryLoadFontData();
+  }
+
+  if (!cachedFontData) {
+    const attemptedLocations = [
+      ...getRendererFontPathCandidates(),
+      ...getRendererFontUrlCandidates()
+    ];
+
     throw new Error(
-      `Fonte de renderizacao nao encontrada. Defina CREATIVE_FONT_PATH apontando para um .ttf valido ou adicione public/fonts/noto-sans-v27-latin-regular.ttf. Caminhos tentados: ${getRendererFontCandidates().join(", ")}`
+      `Fonte de renderizacao nao encontrada. Defina CREATIVE_FONT_PATH ou CREATIVE_FONT_URL apontando para um .ttf valido, ou adicione public/fonts/${RENDERER_FONT_FILE}. Caminhos tentados: ${attemptedLocations.join(", ")}`
     );
   }
 
