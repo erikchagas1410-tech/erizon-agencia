@@ -301,7 +301,7 @@ function CtaBadge({ creative }: { creative: CreativeJson }) {
   return (
     <div
       style={{
-        display: "inline-flex",
+        display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: creative.format === "story" ? "18px 30px" : "14px 24px",
@@ -500,7 +500,7 @@ function OfferLayout({
       >
         <div
           style={{
-            display: "inline-flex",
+            display: "flex",
             alignSelf: "flex-start",
             padding: creative.format === "story" ? "14px 22px" : "12px 18px",
             borderRadius: 999,
@@ -581,6 +581,7 @@ export function CreativeTemplateView({
   return (
     <div
       style={{
+        display: "flex",
         width: dimensions.width * scale,
         height: dimensions.height * scale,
         overflow: "hidden",
@@ -593,11 +594,16 @@ export function CreativeTemplateView({
       <div
         style={{
           position: "relative",
+          display: "flex",
           width: dimensions.width,
           height: dimensions.height,
           overflow: "hidden",
-          transform: scale === 1 ? undefined : `scale(${scale})`,
-          transformOrigin: "top left",
+          ...(scale === 1
+            ? {}
+            : {
+                transform: `scale(${scale})`,
+                transformOrigin: "top left"
+              }),
           fontFamily,
           backgroundColor: background
         }}
@@ -616,6 +622,7 @@ export function CreativeTemplateView({
             <div
               style={{
                 position: "absolute",
+                display: "flex",
                 top: safePadding,
                 left: safePadding,
                 right: safePadding,
@@ -627,6 +634,7 @@ export function CreativeTemplateView({
               <div
                 style={{
                   position: "absolute",
+                  display: "flex",
                   left: 12,
                   top: -26,
                   backgroundColor: hexToRgba("#000000", 0.36),
